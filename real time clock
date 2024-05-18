@@ -18,6 +18,7 @@ local function UpdateTimeDisplay()
     local currentTime = os.date("*t")
     local hour = currentTime.hour
     local minute = string.format("%02d", currentTime.min)
+    local second = string.format("%02d", currentTime.sec)
     local ampm = currentTime.hour >= 12 and "PM" or "AM"
     local day = currentTime.day
     local month = currentTime.month
@@ -26,18 +27,15 @@ local function UpdateTimeDisplay()
     -- Handle special cases for 12 PM and 12 AM
     if hour == 0 then
         hour = 12
-    elseif hour == 12 then
-        ampm = "PM"
-    else
-        hour = hour % 12
+    elseif hour > 12 then
+        hour = hour - 12
     end
 
-    local formattedTime = string.format("%d:%s %s", hour, minute, ampm)
-    local formattedDate = string.format("%02d/%02d/%04d", month, day, year)
-    TimeLabel:UpdateLabel("Current Time: " .. formattedTime .. "\nCurrent Date: " .. formattedDate)
+    -- Update the label with the current time and date
+    TimeLabel:UpdateLabel(string.format("%02d:%02d:%02d %s\n%02d/%02d/%04d", hour, minute, second, ampm, month, day, year))
 end
 
--- Call the UpdateTimeDisplay function every second
+-- Update the time display every second
 while true do
     UpdateTimeDisplay()
     wait(1)
