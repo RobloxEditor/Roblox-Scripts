@@ -1,0 +1,47 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- Load the Kavo UI library
+local Library = loadstring(game:HttpGet("https://pastebin.com/raw/vff1bQ9F"))()
+
+-- Create the main window
+local Window = Library.CreateLib("Real-Time Clock", "Ocean")
+
+-- Create a tab for the clock
+local ClockTab = Window:NewTab("Clock")
+
+-- Create a section for the clock display
+local ClockSection = ClockTab:NewSection("Real-Time Clock")
+
+-- Create a label to display the time and date
+local TimeLabel = ClockSection:NewLabel("Loading...")
+
+-- Function to update the time and date display
+local function UpdateTimeDisplay()
+    local currentTime = os.date("*t")
+    local hour = currentTime.hour
+    local minute = string.format("%02d", currentTime.min)
+    local ampm = currentTime.hour >= 12 and "PM" or "AM"
+    local day = currentTime.day
+    local month = currentTime.month
+    local year = currentTime.year
+
+    -- Handle special cases for 12 PM and 12 AM
+    if hour == 0 then
+        hour = 12
+    elseif hour == 12 then
+        ampm = "PM"
+    else
+        hour = hour % 12
+    end
+
+    local formattedTime = string.format("%d:%s %s", hour, minute, ampm)
+    local formattedDate = string.format("%02d/%02d/%04d", month, day, year)
+    TimeLabel:UpdateLabel("Current Time: " .. formattedTime .. "\nCurrent Date: " .. formattedDate)
+end
+
+-- Call the UpdateTimeDisplay function every second
+while true do
+    UpdateTimeDisplay()
+    wait(1)
+end
