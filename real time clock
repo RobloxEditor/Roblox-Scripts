@@ -1,5 +1,4 @@
-
-    -- Create the main window
+-- Create the main window
 local Window = Library.CreateLib("Real-Time Clock", "Ocean")
 
 -- Create a tab for the clock
