@@ -22,14 +22,14 @@ Section:NewButton("Say Whore", "Sends Whore' in the chat", function()
     local Players = game:GetService("Players")
     local player = Players.LocalPlayer
     local chatService = game:GetService("Chat")
-    chatService:Chat(player.Character.Head, "Nigga", Enum.ChatColor.Red)
+    chatService:Chat(player.Character.Head, "Whore", Enum.ChatColor.Red)
 end)
 
 Section:NewButton("Say Dick", "Sends Dick' in the chat", function()
     local Players = game:GetService("Players")
     local player = Players.LocalPlayer
     local chatService = game:GetService("Chat")
-    chatService:Chat(player.Character.Head, "Nigga", Enum.ChatColor.Red)
+    chatService:Chat(player.Character.Head, "Dick", Enum.ChatColor.Red)
 end)
 
 Section:NewButton("Say Rape", "Sends Rape' in the chat", function()
