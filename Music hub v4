@@ -1,0 +1,731 @@
+local Library = loadstring(game:HttpGet("https://pastebin.com/raw/vff1bQ9F"))()
+
+
+
+-- Functions
+
+local colors = {
+
+    SchemeColor = Color3.fromRGB(245, 205, 222),
+
+    Background = Color3.fromRGB(196, 191, 219),
+
+    Header = Color3.fromRGB(0, 0, 0),
+
+    TextColor = Color3.fromRGB(112, 124, 144),
+
+    ElementColor = Color3.fromRGB(210, 145, 188),
+
+}
+
+
+
+local Window = Library.CreateLib("Music Hub V10", colors)
+
+
+
+-- Home
+
+local Tab = Window:NewTab("username info")
+
+Tab:NewSection("--> Gui Information <--")
+
+Tab:NewSection("Hello, Welcome "..game.Players.LocalPlayer.Name.."!")
+
+Tab:NewSection("--> Local Player Info <--")
+
+Tab:NewSection("Username - "..game.Players.LocalPlayer.Name)
+
+Tab:NewSection("Display Name - "..game.Players.LocalPlayer.DisplayName)
+
+Tab:NewSection("User Id - "..game.Players.LocalPlayer.UserId)
+
+Tab:NewSection("Account Age/Days - "..game.Players.LocalPlayer.AccountAge)
+
+Tab:NewSection("Character Appearance ID - "..game.Players.LocalPlayer.CharacterAppearanceId)
+
+Tab:NewSection("--> Game Info <--")
+
+local GetName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+
+Tab:NewSection("Game Name - "..GetName.Name)
+
+Tab:NewSection("Game ID - "..game.PlaceId)
+
+Tab:NewSection("Job ID - "..game.JobId)
+
+Tab:NewSection("Max Players - "..game.Players.MaxPlayers)
+
+
+-- discord
+
+local Tab = Window:NewTab("Discord")
+
+Tab:NewSection("urfavrobloxscharmxo")
+
+
+-- Page 1
+
+local Tab = Window:NewTab("Page 1")
+
+local k00pSection = Tab:NewSection("Page 1 Music Works in All Games")
+
+
+k00pSection:NewButton("Martin Graff - Balance", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://7024183256"
+
+music.Volume = 10
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end) 
+
+
+k00pSection:NewButton("desert star", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://5410084938"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end) 
+
+
+k00pSection:NewButton("Martin Graff - Balance Pitched", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://7024183256"
+
+music.Volume = 1
+
+music.Pitch = 2
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end) 
+
+
+k00pSection:NewButton("ily Pitched", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://15957461869"
+
+music.Volume = 1
+
+music.Pitch = 2
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("ily", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://15957461869"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("taco bot 3000", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9245552700"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end) 
+
+k00pSection:NewButton("taco bot 3000 pitched", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9245552700"
+
+music.Volume = 1
+
+music.Pitch = 2
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end) 
+
+
+k00pSection:NewButton("raining tacos", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://142376088"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("dion shiawase", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://5409360995"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("dion shiawase Pitched", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://5409360995"
+
+music.Volume = 1
+
+music.Pitch = 2
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("cute music", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://1836519309"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+local Tab = Window:NewTab("Page 2")
+
+local k00pSection = Tab:NewSection("The Normal Elevator")
+
+k00pSection:NewButton("leaked audio", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9280071551"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("sharknado", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9280550653"
+
+music.Volume = 5
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("walkonwater", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9248834984"
+
+music.Volume = 5
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+k00pSection:NewButton("no really - rust", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://272018606"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+k00pSection:NewButton("his cute voice", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://528728818"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+local Tab = Window:NewTab("Page 3")
+
+local k00pSection = Tab:NewSection("lucky blocks battlegrounds")
+
+
+k00pSection:NewButton("tobu - reflection", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://11864859928"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+local Tab = Window:NewTab("Page 4")
+
+local k00pSection = Tab:NewSection("Epic Minigames")
+
+
+k00pSection:NewButton("moonlight", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://1961241743"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("velocity", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://10104284161"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("flute", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://467913387"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("Upbeat A", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9072359432"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("Scared", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://10104284779"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("metropolis", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://659727291"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("eg", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://8996464109"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("miracle", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://1619501952"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("meow", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://467932279"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("pink", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://4681135952"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("staeam", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://4960289400"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("paeree", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://468621896"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("lane", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://8998281117"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("wayback", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://467942273"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("nautilus", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://9072367803"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("block", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://467916328"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+k00pSection:NewButton("Colossal Assault", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://2343544260"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+local Tab = Window:NewTab("Page 5")
+
+local k00pSection = Tab:NewSection("Area 17")
+
+
+k00pSection:NewButton("Breach", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://545296451"
+
+music.Volume = 0.5
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+local Tab = Window:NewTab("Page 6")
+
+local k00pSection = Tab:NewSection("Slender")
+
+
+k00pSection:NewButton("1 Near Sound 2", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://12306579170"
+
+music.Volume = 1
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+local Tab = Window:NewTab("Page 7")
+ 
+local k00pSection = Tab:NewSection("Jailbreak")
+ 
+ 
+k00pSection:NewButton("cyber heist", "", function()
+ 
+local music = Instance.new("Sound", game.Workspace)
+ 
+music.SoundId = "rbxassetid://9042159897"
+ 
+music.Volume = 5
+ 
+music.Looped = false
+ 
+music.PlayOnRemove = false
+ 
+music:Play()
+ 
+end)
