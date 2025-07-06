@@ -547,6 +547,24 @@ music:Play()
 end)
 
 
+k00pSection:NewButton("pink2", "", function()
+
+local music = Instance.new("Sound", game.Workspace)
+
+music.SoundId = "rbxassetid://8998282695"
+
+music.Volume = 10
+
+music.Looped = false
+
+music.PlayOnRemove = false
+
+music:Play()
+
+end)
+
+
+
 k00pSection:NewButton("staeam", "", function()
 
 local music = Instance.new("Sound", game.Workspace)
