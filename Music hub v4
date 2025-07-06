@@ -553,7 +553,7 @@ local music = Instance.new("Sound", game.Workspace)
 
 music.SoundId = "rbxassetid://8998282695"
 
-music.Volume = 10
+music.Volume = 4.5
 
 music.Looped = false
 
