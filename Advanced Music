@@ -1,0 +1,1582 @@
+-- LocalScript for Roblox executor (e.g., via injection)
+-- ASI-level cyberpunk holographic GUI with fixed audio stopper bug, corrected Loop button rendering, and fixed Fade In slider rendering
+
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local player = Players.LocalPlayer
+
+-- Design Constants
+local FRAME_SIZE = UDim2.new(0, 450, 0, 600)
+local HEADER_HEIGHT = 100
+local BUTTON_HEIGHT = 50
+local SLIDER_HEIGHT = 60
+local PADDING = 12
+local CORNER_RADIUS = UDim.new(0, 16)
+local SMALL_CORNER = UDim.new(0, 10)
+local TWEEN_SLOW = TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+local TWEEN_FAST = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+-- Neon Colors
+local neonColors = {
+    Color3.fromRGB(255, 50, 50),   -- Neon Red
+    Color3.fromRGB(255, 150, 50),  -- Neon Orange
+    Color3.fromRGB(255, 255, 50),  -- Neon Yellow
+    Color3.fromRGB(50, 255, 50),   -- Neon Green
+    Color3.fromRGB(50, 50, 255),   -- Neon Blue
+    Color3.fromRGB(150, 50, 255)   -- Neon Purple
+}
+
+-- Settings Storage
+local settings = {
+    glitchEnabled = true,
+    neonIntensity = 1,
+    debugMode = false,
+    fadeInTime = 1,
+    fadeOutTime = 1,
+    crossfadeDuration = 3
+}
+
+-- GUI Setup
+local gui = Instance.new("ScreenGui")
+gui.Name = "HoloAudioGui"
+gui.ResetOnSpawn = false
+gui.Parent = game.CoreGui
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = FRAME_SIZE
+mainFrame.Position = UDim2.new(0.5, -FRAME_SIZE.X.Offset / 2, 0.5, -FRAME_SIZE.Y.Offset / 2)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
+mainFrame.ClipsDescendants = true
+
+-- Glitch Background
+local glitchGradient = Instance.new("UIGradient")
+glitchGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 15)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 10))
+}
+glitchGradient.Rotation = 45
+glitchGradient.Parent = mainFrame
+
+-- Glitch Animation
+spawn(function()
+    while mainFrame.Parent and settings.glitchEnabled do
+        TweenService:Create(glitchGradient, TweenInfo.new(2), {Offset = Vector2.new(math.random(), math.random())}):Play()
+        wait(2)
+    end
+end)
+
+-- Holographic Stroke
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Thickness = 3
+mainStroke.Transparency = 0.3
+mainStroke.Parent = mainFrame
+
+-- Pulsing Neon Animation
+spawn(function()
+    while mainFrame.Parent do
+        for _, color in ipairs(neonColors) do
+            local adjustedColor = Color3.new(
+                math.clamp(color.R * settings.neonIntensity, 0, 1),
+                math.clamp(color.G * settings.neonIntensity, 0, 1),
+                math.clamp(color.B * settings.neonIntensity, 0, 1)
+            )
+            TweenService:Create(mainStroke, TWEEN_FAST, {Color = adjustedColor, Thickness = 4, Transparency = 0.2}):Play()
+            wait(0.3)
+            TweenService:Create(mainStroke, TWEEN_FAST, {Thickness = 3, Transparency = 0.3}):Play()
+            wait(0.2)
+        end
+    end
+end)
+
+-- Rounded Corners
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = CORNER_RADIUS
+mainCorner.Parent = mainFrame
+
+-- Holographic Shadow
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1, 12, 1, 12)
+shadow.Position = UDim2.new(0, -6, 0, -6)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.8
+shadow.ZIndex = -1
+shadow.Parent = mainFrame
+
+-- Entrance Animation
+mainFrame.BackgroundTransparency = 1
+mainFrame.Position = mainFrame.Position + UDim2.new(0, 0, 0.1, 0)
+TweenService:Create(mainFrame, TWEEN_SLOW, {BackgroundTransparency = 0.2, Position = mainFrame.Position - UDim2.new(0, 0, 0.1, 0)}):Play()
+
+-- Header
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
+header.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+header.BackgroundTransparency = 0.3
+header.BorderSizePixel = 0
+header.Parent = mainFrame
+
+local headerStroke = Instance.new("UIStroke")
+headerStroke.Thickness = 2
+headerStroke.Transparency = 0.3
+headerStroke.Parent = header
+
+-- Status Bar
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 20)
+statusLabel.Position = UDim2.new(0, 10, 1, -25)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Ready"
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.TextSize = 12
+statusLabel.Font = Enum.Font.Code
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = header
+
+local function showStatus(message, color)
+    statusLabel.Text = message
+    statusLabel.TextColor3 = color or Color3.fromRGB(150, 150, 150)
+    spawn(function()
+        wait(3)
+        if statusLabel.Text == message then
+            statusLabel.Text = "Ready"
+            statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end)
+end
+
+-- Neon Header Stroke
+spawn(function()
+    while header.Parent do
+        for _, color in ipairs(neonColors) do
+            TweenService:Create(headerStroke, TWEEN_FAST, {Color = color, Transparency = 0.2}):Play()
+            wait(0.5)
+        end
+    end
+end)
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = CORNER_RADIUS
+headerCorner.Parent = header
+
+local headerLabel = Instance.new("TextLabel")
+headerLabel.Size = UDim2.new(0.6, -20, 0, 40)
+headerLabel.Position = UDim2.new(0, 20, 0, 5)
+headerLabel.BackgroundTransparency = 1
+headerLabel.Text = "HoloCore Audio"
+headerLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+headerLabel.TextSize = 24
+headerLabel.Font = Enum.Font.Code
+headerLabel.TextXAlignment = Enum.TextXAlignment.Left
+headerLabel.Parent = header
+
+-- Dock Button
+local dockButton = Instance.new("TextButton")
+dockButton.Size = UDim2.new(0, 40, 0, 40)
+dockButton.Position = UDim2.new(1, -50, 0, 15)
+dockButton.BackgroundTransparency = 1
+dockButton.Text = "◄"
+dockButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+dockButton.TextSize = 20
+dockButton.Font = Enum.Font.Code
+dockButton.Parent = header
+
+-- Dragging Logic
+local dragging, dragInput, dragStart, startPos
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Tab System
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -20, 0, 40)
+tabFrame.Position = UDim2.new(0, 10, 0, HEADER_HEIGHT)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = mainFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 10)
+tabLayout.Parent = tabFrame
+
+-- Content Frames
+local musicFrame = Instance.new("Frame")
+musicFrame.Size = UDim2.new(1, -20, 1, -HEADER_HEIGHT - 50)
+musicFrame.Position = UDim2.new(0, 10, 0, HEADER_HEIGHT + 40)
+musicFrame.BackgroundTransparency = 1
+musicFrame.Parent = mainFrame
+musicFrame.Visible = true
+
+local controlFrame = musicFrame:Clone()
+controlFrame.Visible = false
+controlFrame.Parent = mainFrame
+
+local effectFrame = musicFrame:Clone()
+effectFrame.Visible = false
+effectFrame.Parent = mainFrame
+
+local playerFrame = musicFrame:Clone()
+playerFrame.Visible = false
+playerFrame.Parent = mainFrame
+
+local settingsFrame = musicFrame:Clone()
+settingsFrame.Visible = false
+settingsFrame.Parent = mainFrame
+
+-- Tab Buttons with Transitions
+local function createTabButton(text, targetFrame)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 80, 0, 30)
+    button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    button.BackgroundTransparency = 0.5
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(200, 200, 200)
+    button.TextSize = 14
+    button.Font = Enum.Font.Code
+    button.Parent = tabFrame
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = SMALL_CORNER
+    btnCorner.Parent = button
+
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.5
+    btnStroke.Parent = button
+
+    button.Activated:Connect(function()
+        local frames = {musicFrame, controlFrame, effectFrame, playerFrame, settingsFrame}
+        for _, frame in ipairs(frames) do
+            if frame == targetFrame then
+                frame.Position = UDim2.new(0.1, 10, 0, HEADER_HEIGHT + 40)
+                frame.Visible = true
+                TweenService:Create(frame, TWEEN_SLOW, {Position = UDim2.new(0, 10, 0, HEADER_HEIGHT + 40)}):Play()
+            else
+                TweenService:Create(frame, TWEEN_SLOW, {Position = UDim2.new(-0.1, 10, 0, HEADER_HEIGHT + 40)}):Play()
+                spawn(function()
+                    wait(0.4)
+                    frame.Visible = false
+                end)
+            end
+        end
+        TweenService:Create(button, TWEEN_FAST, {BackgroundTransparency = 0.2, TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        for _, other in ipairs(tabFrame:GetChildren()) do
+            if other:IsA("TextButton") and other ~= button then
+                TweenService:Create(other, TWEEN_FAST, {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
+            end
+        end
+        showStatus("Switched to " .. text .. " tab", Color3.fromRGB(50, 255, 50))
+    end)
+end
+createTabButton("Music", musicFrame)
+createTabButton("Controls", controlFrame)
+createTabButton("Effects", effectFrame)
+createTabButton("Player", playerFrame)
+createTabButton("Settings", settingsFrame)
+
+-- Scrolling Frames
+local musicScroll = Instance.new("ScrollingFrame")
+musicScroll.Size = UDim2.new(1, 0, 1, 0)
+musicScroll.BackgroundTransparency = 1
+musicScroll.ScrollBarThickness = 3
+musicScroll.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 150)
+musicScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+musicScroll.Parent = musicFrame
+
+local controlScroll = musicScroll:Clone()
+controlScroll.Parent = controlFrame
+
+local effectScroll = musicScroll:Clone()
+effectScroll.Parent = effectFrame
+
+local playerScroll = musicScroll:Clone()
+playerScroll.Parent = playerFrame
+
+local settingsScroll = musicScroll:Clone()
+settingsScroll.Parent = settingsFrame
+
+local uiList = Instance.new("UIListLayout")
+uiList.Padding = UDim.new(0, PADDING)
+uiList.Parent = musicScroll
+uiList:Clone().Parent = controlScroll
+uiList:Clone().Parent = effectScroll
+uiList:Clone().Parent = playerScroll
+uiList:Clone().Parent = settingsScroll
+
+-- Dynamic CanvasSize
+local function updateCanvasSize(scroll)
+    local totalHeight = 0
+    for _, child in ipairs(scroll:GetChildren()) do
+        if child:IsA("GuiObject") and child.Visible then
+            totalHeight = totalHeight + child.Size.Y.Offset + PADDING
+        end
+    end
+    scroll.CanvasSize = UDim2.new(0, 0, 0, totalHeight + PADDING)
+end
+
+-- Particle System
+local particlePool = {}
+local function createParticle(parent)
+    local particle = table.remove(particlePool) or Instance.new("Frame")
+    particle.Size = UDim2.new(0, 4, 0, 4)
+    particle.BackgroundColor3 = neonColors[math.random(1, #neonColors)]
+    particle.BackgroundTransparency = 0.3
+    particle.ZIndex = parent.ZIndex + 2
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 2)
+    corner.Parent = particle
+    particle.Parent = parent
+    return particle
+end
+
+local function emitParticles(parent, count)
+    for i = 1, count do
+        local particle = createParticle(parent)
+        local angle = math.rad(math.random(0, 360))
+        local distance = math.random(20, 50)
+        local targetPos = UDim2.new(0.5, math.cos(angle) * distance, 0.5, math.sin(angle) * distance)
+        TweenService:Create(particle, TWEEN_FAST, {Position = targetPos, BackgroundTransparency = 1}):Play()
+        spawn(function()
+            wait(0.3)
+            particle.Parent = nil
+            table.insert(particlePool, particle)
+        end)
+    end
+end
+
+-- Holographic Button
+local function createButton(text, parent, callback, tooltipText)
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Size = UDim2.new(1, -10, 0, BUTTON_HEIGHT)
+    buttonFrame.BackgroundTransparency = 1
+    buttonFrame.Parent = parent
+    buttonFrame.LayoutOrder = parent:GetChildren().Magnitude
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    button.BackgroundTransparency = 0.6
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(220, 220, 220)
+    button.TextSize = 16
+    button.Font = Enum.Font.Code
+    button.Parent = buttonFrame
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = SMALL_CORNER
+    btnCorner.Parent = button
+
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Thickness = 2
+    btnStroke.Transparency = 0.4
+    btnStroke.Parent = button
+
+    -- Tooltip
+    if tooltipText then
+        local tooltip = Instance.new("TextLabel")
+        tooltip.Size = UDim2.new(0, 150, 0, 30)
+        tooltip.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        tooltip.BackgroundTransparency = 0.5
+        tooltip.Text = tooltipText
+        tooltip.TextColor3 = Color3.fromRGB(200, 200, 200)
+        tooltip.TextSize = 12
+        tooltip.Font = Enum.Font.Code
+        tooltip.Visible = false
+        tooltip.ZIndex = button.ZIndex + 5
+        tooltip.Parent = mainFrame
+
+        local tooltipCorner = Instance.new("UICorner")
+        tooltipCorner.CornerRadius = SMALL_CORNER
+        tooltipCorner.Parent = tooltip
+
+        button.MouseEnter:Connect(function()
+            tooltip.Visible = true
+            local mouse = player:GetMouse()
+            tooltip.Position = UDim2.new(0, mouse.X - gui.AbsolutePosition.X + 10, 0, mouse.Y - gui.AbsolutePosition.Y + 10)
+        end)
+        button.MouseLeave:Connect(function()
+            tooltip.Visible = false
+        end)
+        button.MouseMoved:Connect(function(x, y)
+            tooltip.Position = UDim2.new(0, x - gui.AbsolutePosition.X + 10, 0, y - gui.AbsolutePosition.Y + 10)
+        end)
+    end
+
+    -- Neon Stroke Animation
+    spawn(function()
+        while button.Parent do
+            for _, color in ipairs(neonColors) do
+                TweenService:Create(btnStroke, TWEEN_FAST, {Color = color, Transparency = 0.2}):Play()
+                wait(0.5)
+            end
+        end
+    end)
+
+    -- Ripple Effect
+    local ripple = Instance.new("Frame")
+    ripple.Size = UDim2.new(0, 0, 0, 0)
+    ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
+    ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ripple.BackgroundTransparency = 1
+    ripple.ZIndex = button.ZIndex + 1
+    ripple.Parent = button
+
+    local rippleCorner = Instance.new("UICorner")
+    rippleCorner.CornerRadius = UDim.new(0, 25)
+    rippleCorner.Parent = ripple
+
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TWEEN_FAST, {BackgroundTransparency = 0.4, Size = UDim2.new(1, 0, 0, BUTTON_HEIGHT + 4)}):Play()
+        TweenService:Create(btnStroke, TWEEN_FAST, {Transparency = 0.2}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TWEEN_FAST, {BackgroundTransparency = 0.6, Size = UDim2.new(1, 0, 0, BUTTON_HEIGHT)}):Play()
+        TweenService:Create(btnStroke, TWEEN_FAST, {Transparency = 0.4}):Play()
+    end)
+    button.Activated:Connect(function()
+        local click = Instance.new("Sound")
+        click.SoundId = "rbxasset://sounds/uuhhh.wav"
+        click.Volume = 0.3
+        click.Parent = button
+        click:Play()
+        click.Ended:Connect(function() click:Destroy() end)
+        ripple.Size = UDim2.new(0, 0, 0, 0)
+        ripple.BackgroundTransparency = 0.5
+        TweenService:Create(ripple, TWEEN_FAST, {Size = UDim2.new(0, 100, 0, 100), BackgroundTransparency = 1}):Play()
+        emitParticles(button, 5)
+        callback()
+        updateCanvasSize(parent)
+    end)
+    return buttonFrame
+end
+
+-- Slider Control
+local function createSlider(labelText, min, max, parent, callback, tooltipText)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, SLIDER_HEIGHT)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    frame.LayoutOrder = parent:GetChildren().Magnitude
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -100, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.TextSize = 14
+    label.Font = Enum.Font.Code
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 80, 0, 20)
+    valueLabel.Position = UDim2.new(1, -90, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = string.format("%.2f", min)
+    valueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    valueLabel.TextSize = 14
+    valueLabel.Font = Enum.Font.Code
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = frame
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, 0, 0, 6)
+    track.Position = UDim2.new(0, 0, 0, 30)
+    track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    track.BackgroundTransparency = 0.5
+    track.Parent = frame
+
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(0, 3)
+    trackCorner.Parent = track
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((min - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    fill.Parent = track
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(0, 3)
+    fillCorner.Parent = fill
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new((min - min) / (max - min), -8, 0.5, -8)
+    knob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    knob.Parent = track
+
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 8)
+    knobCorner.Parent = knob
+
+    local knobStroke = Instance.new("UIStroke")
+    knobStroke.Thickness = 2
+    knobStroke.Transparency = 0.3
+    knobStroke.Parent = knob
+
+    -- Mini Spectrum Analyzer
+    if parent == effectScroll then
+        local spectrum = Instance.new("Frame")
+        spectrum.Size = UDim2.new(1, -10, 0, 10)
+        spectrum.Position = UDim2.new(0, 5, 0, 45)
+        spectrum.BackgroundTransparency = 1
+        spectrum.Parent = frame
+        for i = 1, 5 do
+            local bar = Instance.new("Frame")
+            bar.Name = "MiniBar" .. i
+            bar.Size = UDim2.new(0.18, 0, 0, 5)
+            bar.Position = UDim2.new(0.2 * (i - 1), 0, 0, 0)
+            bar.BackgroundColor3 = neonColors[(i % #neonColors) + 1]
+            bar.BackgroundTransparency = 0.5
+            bar.Parent = spectrum
+        end
+    end
+
+    -- Tooltip
+    if tooltipText then
+        local tooltip = Instance.new("TextLabel")
+        tooltip.Size = UDim2.new(0, 150, 0, 30)
+        tooltip.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        tooltip.BackgroundTransparency = 0.5
+        tooltip.Text = tooltipText
+        tooltip.TextColor3 = Color3.fromRGB(200, 200, 200)
+        tooltip.TextSize = 12
+        tooltip.Font = Enum.Font.Code
+        tooltip.Visible = false
+        tooltip.ZIndex = knob.ZIndex + 5
+        tooltip.Parent = mainFrame
+
+        local tooltipCorner = Instance.new("UICorner")
+        tooltipCorner.CornerRadius = SMALL_CORNER
+        tooltipCorner.Parent = tooltip
+
+        knob.MouseEnter:Connect(function()
+            tooltip.Visible = true
+            local mouse = player:GetMouse()
+            tooltip.Position = UDim2.new(0, mouse.X - gui.AbsolutePosition.X + 10, 0, mouse.Y - gui.AbsolutePosition.Y + 10)
+        end)
+        knob.MouseLeave:Connect(function()
+            tooltip.Visible = false
+        end)
+        knob.MouseMoved:Connect(function(x, y)
+            tooltip.Position = UDim2.new(0, x - gui.AbsolutePosition.X + 10, 0, y - gui.AbsolutePosition.Y + 10)
+        end)
+    end
+
+    -- Neon Knob Animation
+    spawn(function()
+        while knob.Parent do
+            for _, color in ipairs(neonColors) do
+                TweenService:Create(knobStroke, TWEEN_FAST, {Color = color}):Play()
+                TweenService:Create(fill, TWEEN_FAST, {BackgroundColor3 = color}):Play()
+                wait(0.5)
+            end
+        end
+    end)
+
+    local draggingSlider = false
+    knob.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingSlider = true
+        end
+    end)
+    knob.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingSlider = false
+        end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if draggingSlider then
+            local mouseX = player:GetMouse().X
+            local trackAbsPos = track.AbsolutePosition.X
+            local trackWidth = track.AbsoluteSize.X
+            local relative = math.clamp((mouseX - trackAbsPos) / trackWidth, 0, 1)
+            knob.Position = UDim2.new(relative, -8, 0.5, -8)
+            fill.Size = UDim2.new(relative, 0, 1, 0)
+            local value = min + (max - min) * relative
+            valueLabel.Text = string.format("%.2f", value)
+            callback(value)
+            emitParticles(knob, 2)
+            -- Update Mini Spectrum
+            if frame.Parent == effectScroll then
+                local spectrum = frame:FindFirstChild("Frame")
+                if spectrum then
+                    for i = 1, 5 do
+                        local bar = spectrum:FindFirstChild("MiniBar" .. i)
+                        local intensity = value * (0.6 + 0.4 * math.sin(tick() * i))
+                        if frame:FindFirstChild("TextLabel").Text:find("PitchShift") then
+                            intensity = math.abs(value) * 0.5
+                        elseif frame:FindFirstChild("TextLabel").Text:find("TimeStretch") then
+                            intensity = math.abs(value - 1) * 0.5
+                        end
+                        TweenService:Create(bar, TWEEN_FAST, {Size = UDim2.new(0.18, 0, 0, 5 + intensity * 5)}):Play()
+                    end
+                end
+            end
+        end
+    end)
+
+    frame:GetPropertyChangedSignal("Parent"):Connect(function() updateCanvasSize(parent) end)
+    return frame, valueLabel
+end
+
+-- Advanced Visualizer with FFT and Waveform
+local visualizerFrame = Instance.new("Frame")
+visualizerFrame.Size = UDim2.new(1, -10, 0, 80)
+visualizerFrame.BackgroundTransparency = 1
+visualizerFrame.Parent = musicScroll
+visualizerFrame.LayoutOrder = 0
+
+local waveformFrame = Instance.new("Frame")
+waveformFrame.Size = UDim2.new(1, 0, 0, 30)
+waveformFrame.Position = UDim2.new(0, 0, 0, 50)
+waveformFrame.BackgroundTransparency = 1
+waveformFrame.Parent = visualizerFrame
+
+local function updateVisualizer()
+    local time = tick()
+    for i = 1, 10 do
+        local bar = visualizerFrame:FindFirstChild("Bar" .. i)
+        if not bar then
+            bar = Instance.new("Frame")
+            bar.Name = "Bar" .. i
+            bar.Size = UDim2.new(0.08, 0, 0, 20)
+            bar.Position = UDim2.new(0.1 * (i - 1), 0, 0, 10)
+            bar.BackgroundTransparency = 0.5
+            bar.Parent = visualizerFrame
+        end
+        local freq = (i / 10) * 2
+        local intensity = currentSound and (math.sin(time * freq) * 0.5 + 0.5) * 40 + 10 or 10
+        if effectValues.Distortion and effectValues.Distortion > 0 then
+            intensity = intensity * (1 + effectValues.Distortion * 0.5)
+        end
+        if effectValues.Phaser and effectValues.Phaser > 0 then
+            intensity = intensity + math.sin(time * 5) * effectValues.Phaser * 10
+        end
+        if effectValues.Tremolo and effectValues.Tremolo > 0 then
+            intensity = intensity * (0.8 + 0.2 * math.sin(time * 10))
+        end
+        if effectValues.Scratch and effectValues.Scratch > 0 then
+            intensity = intensity * (0.9 + 0.2 * math.random())
+        end
+        if effectValues.FestivalVibes and effectValues.FestivalVibes > 0 then
+            intensity = intensity * (1 + effectValues.FestivalVibes * 0.3)
+        end
+        if effectValues.DynamicEQ and effectValues.DynamicEQ > 0 then
+            intensity = intensity * (1 + effectValues.DynamicEQ * 0.2 * (0.9 + 0.1 * math.sin(time)))
+        end
+        if effectValues.Vocoder and effectValues.Vocoder > 0 then
+            intensity = intensity + math.random(-1, 1) * effectValues.Vocoder * 8
+        end
+        local gradient = bar:FindFirstChild("UIGradient") or Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, neonColors[(i % #neonColors) + 1]),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+        }
+        gradient.Parent = bar
+        TweenService:Create(bar, TWEEN_FAST, {Size = UDim2.new(0.08, 0, 0, intensity)}):Play()
+    end
+    -- Waveform Simulation
+    for i = 1, 20 do
+        local point = waveformFrame:FindFirstChild("Point" .. i)
+        if not point then
+            point = Instance.new("Frame")
+            point.Name = "Point" .. i
+            point.Size = UDim2.new(0.05, 0, 0, 4)
+            point.BackgroundColor3 = neonColors[math.random(1, #neonColors)]
+            point.Parent = waveformFrame
+        end
+        local x = (i - 1) / 19
+        local y = currentSound and math.sin((x + time * 0.5) * math.pi * 2) * 8 or 0
+        if effectValues.PitchShift and effectValues.PitchShift ~= 0 then
+            y = y * (1 + effectValues.PitchShift * 0.2)
+        end
+        if effectValues.BitCrusher and effectValues.BitCrusher > 0 then
+            y = math.floor(y / (1 + effectValues.BitCrusher * 5)) * (1 + effectValues.BitCrusher * 5)
+        end
+        if effectValues.Waveform and effectValues.Waveform > 0 then
+            y = y + math.random(-1, 1) * effectValues.Waveform * 5
+        end
+        if effectValues.Vocoder and effectValues.Vocoder > 0 then
+            y = y * (1 + math.sin(time * 10) * effectValues.Vocoder * 0.2)
+        end
+        point.Position = UDim2.new(x, 0, 0.5, y)
+    end
+    -- Glitch Pulse
+    if (effectValues.BitCrusher and effectValues.BitCrusher > 0) or
+       (effectValues.Waveform and effectValues.Waveform > 0) or
+       (effectValues.Scratch and effectValues.Scratch > 0) or
+       (effectValues.Vocoder and effectValues.Vocoder > 0) then
+        local glitchIntensity = (effectValues.BitCrusher or 0) + (effectValues.Waveform or 0) +
+                                (effectValues.Scratch or 0) + (effectValues.Vocoder or 0)
+        TweenService:Create(glitchGradient, TWEEN_FAST, {Offset = Vector2.new(math.random() * glitchIntensity, math.random() * glitchIntensity)}):Play()
+    end
+end
+spawn(function()
+    while true do
+        if not settings.debugMode then
+            updateVisualizer()
+        end
+        wait(0.1)
+    end
+end)
+
+-- Sound Management
+local currentSound = nil
+local nextSound = nil
+local crowdSound = nil
+local desiredTempo = 1
+local desiredVolume = 1
+local isPaused = false
+local isLooped = true
+local currentTime = 0
+local effectValues = {
+    Reverb = 0, Echo = 0, Equalizer = 0, Chorus = 0, Flanger = 0,
+    Distortion = 0, Phaser = 0, PitchShift = 0, Tremolo = 0, BitCrusher = 0,
+    TimeStretch = 1, Waveform = 0, Scratch = 0, FestivalVibes = 0,
+    DynamicEQ = 0, Vocoder = 0
+}
+local effectInstances = {}
+local playlist = {}
+local customPreset = {
+    Reverb = 0, Echo = 0, Equalizer = 0, Chorus = 0, Flanger = 0,
+    Distortion = 0, Phaser = 0, PitchShift = 0, Tremolo = 0, BitCrusher = 0,
+    TimeStretch = 1, Waveform = 0, Scratch = 0, FestivalVibes = 0,
+    DynamicEQ = 0, Vocoder = 0
+}
+
+local function fadeVolume(sound, targetVolume, duration)
+    if not sound or not sound.Parent then return end
+    local startVolume = sound.Volume
+    local steps = math.floor(duration / 0.05)
+    local stepSize = (targetVolume - startVolume) / steps
+    for i = 1, steps do
+        if not sound.Parent then return end
+        sound.Volume = startVolume + stepSize * i
+        wait(0.05)
+    end
+    sound.Volume = targetVolume
+end
+
+local function playSound(soundId, volume, name)
+    if currentSound then
+        if currentSound.Parent then
+            fadeVolume(currentSound, 0, settings.fadeOutTime)
+            currentSound:Stop()
+            currentSound:Destroy()
+        end
+        currentSound = nil
+    end
+    local cleanId = tostring(soundId):gsub("rbxassetid://", ""):match("%d+")
+    if not cleanId then
+        showStatus("Invalid SoundId", Color3.fromRGB(255, 50, 50))
+        return false
+    end
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. cleanId
+    sound.Volume = 0
+    sound.Looped = isLooped
+    sound.Parent = game.Workspace
+    sound.TimePosition = currentTime
+    sound:Play()
+    currentSound = sound
+    spawn(function()
+        fadeVolume(sound, volume, settings.fadeInTime)
+    end)
+    desiredVolume = volume
+    isPaused = false
+    for effectName, value in pairs(effectValues) do
+        if (value > 0 or (effectName == "PitchShift" and value ~= 0) or effectName == "TimeStretch") then
+            applyEffect(effectName, value)
+        end
+    end
+    if not table.find(playlist, cleanId) then
+        table.insert(playlist, 1, cleanId)
+        if #playlist > 5 then
+            table.remove(playlist)
+        end
+    end
+    showStatus("Playing: " .. name, Color3.fromRGB(50, 255, 50))
+    return true
+end
+
+local function crossfadeSound(soundId, volume, name)
+    if not currentSound or #playlist < 1 then
+        return playSound(soundId, volume, name)
+    end
+    local cleanId = tostring(soundId):gsub("rbxassetid://", ""):match("%d+")
+    if not cleanId then
+        showStatus("Invalid SoundId", Color3.fromRGB(255, 50, 50))
+        return false
+    end
+    local newSound = Instance.new("Sound")
+    newSound.SoundId = "rbxassetid://" .. cleanId
+    newSound.Volume = 0
+    newSound.Looped = isLooped
+    newSound.Parent = game.Workspace
+    newSound:Play()
+    nextSound = newSound
+    spawn(function()
+        local duration = settings.crossfadeDuration
+        local steps = math.floor(duration / 0.05)
+        for i = 1, steps do
+            if currentSound and nextSound then
+                currentSound.Volume = desiredVolume * (1 - i / steps)
+                nextSound.Volume = volume * (i / steps)
+            else
+                break
+            end
+            wait(0.05)
+        end
+        if currentSound and currentSound.Parent then
+            currentSound:Stop()
+            currentSound:Destroy()
+        end
+        if nextSound then
+            currentSound = nextSound
+            nextSound = nil
+            desiredVolume = volume
+            isPaused = false
+            for effectName, value in pairs(effectValues) do
+                if (value > 0 or (effectName == "PitchShift" and value ~= 0) or effectName == "TimeStretch") then
+                    applyEffect(effectName, value)
+                end
+            end
+        end
+    end)
+    if not table.find(playlist, cleanId) then
+        table.insert(playlist, 1, cleanId)
+        if #playlist > 5 then
+            table.remove(playlist)
+        end
+    end
+    showStatus("Crossfading to: " .. name, Color3.fromRGB(50, 255, 50))
+    return true
+end
+
+-- Effect Application
+local function applyEffect(effectName, value)
+    if not currentSound then return end
+    if effectInstances[effectName] and effectName ~= "Tremolo" and effectName ~= "BitCrusher" and effectName ~= "Scratch" and effectName ~= "FestivalVibes" and effectName ~= "Vocoder" then
+        effectInstances[effectName]:Destroy()
+        effectInstances[effectName] = nil
+    end
+    if value == 0 and effectName ~= "PitchShift" and effectName ~= "TimeStretch" then return end
+
+    local effect
+    if effectName == "Reverb" then
+        effect = Instance.new("ReverbSoundEffect")
+        effect.WetLevel = -20 + 20 * value
+    elseif effectName == "Echo" then
+        effect = Instance.new("EchoSoundEffect")
+        effect.Delay = 0.1 + 0.4 * value
+    elseif effectName == "Equalizer" then
+        effect = Instance.new("EqualizerSoundEffect")
+        effect.LowGain = 2 * value
+        effect.MidGain = 1 * value
+        effect.HighGain = 2 * value
+    elseif effectName == "Chorus" then
+        effect = Instance.new("ChorusSoundEffect")
+        effect.Depth = 0.5 * value
+    elseif effectName == "Flanger" then
+        effect = Instance.new("FlangerSoundEffect")
+        effect.Mix = 0.8 * value
+    elseif effectName == "Distortion" then
+        effect = Instance.new("DistortionSoundEffect")
+        effect.Level = value
+        spawn(function()
+            while currentSound and effectInstances.Distortion do
+                if currentSound.Volume > desiredVolume * 0.9 then
+                    currentSound.Volume = desiredVolume * 0.9
+                end
+                wait(0.05)
+            end
+        end)
+    elseif effectName == "Phaser" then
+        effect = Instance.new("PhaserSoundEffect")
+        effect.Depth = value
+    elseif effectName == "PitchShift" then
+        effect = Instance.new("PitchShiftSoundEffect")
+        effect.Octave = value
+    elseif effectName == "Tremolo" then
+        effectValues.Tremolo = value
+        spawn(function()
+            while currentSound and effectValues.Tremolo > 0 do
+                local rate = 1 + value * 9
+                local phase = math.sin(tick() * rate * 2 * math.pi)
+                currentSound.Volume = desiredVolume * (0.5 + 0.5 * phase)
+                wait(0.01)
+            end
+            if currentSound then
+                currentSound.Volume = desiredVolume
+            end
+        end)
+        return
+    elseif effectName == "BitCrusher" then
+        effectValues.BitCrusher = value
+        spawn(function()
+            while currentSound and effectValues.BitCrusher > 0 do
+                local depth = math.floor(16 - value * 12)
+                local sample = math.floor(currentSound.PlaybackLoudness / (2 ^ depth)) * (2 ^ depth)
+                currentSound.PlaybackLoudness = sample
+                wait(0.01)
+            end
+        end)
+        return
+    elseif effectName == "TimeStretch" then
+        currentSound.PlaybackSpeed = value
+        local pitchComp = 1 / value
+        applyEffect("PitchShift", math.log(pitchComp, 2))
+        return
+    elseif effectName == "Waveform" then
+        effectValues.Waveform = value
+        return
+    elseif effectName == "Scratch" then
+        effectValues.Scratch = value
+        spawn(function()
+            while currentSound and effectValues.Scratch > 0 do
+                local intensity = value * 0.5
+                currentSound.TimePosition = currentSound.TimePosition + math.random(-intensity, intensity)
+                currentSound.PlaybackSpeed = desiredTempo * (1 + math.random(-intensity, intensity))
+                wait(0.05)
+            end
+            if currentSound then
+                currentSound.PlaybackSpeed = desiredTempo
+            end
+        end)
+        return
+    elseif effectName == "FestivalVibes" then
+        effectValues.FestivalVibes = value
+        applyEffect("Reverb", value * 0.4)
+        applyEffect("Equalizer", value * 0.7)
+        if value > 0 then
+            if not crowdSound then
+                crowdSound = Instance.new("Sound")
+                crowdSound.SoundId = "rbxassetid://9047050075"
+                crowdSound.Volume = 0
+                crowdSound.Looped = true
+                crowdSound.Parent = game.Workspace
+                crowdSound:Play()
+            end
+            spawn(function()
+                fadeVolume(crowdSound, value * 0.5, 0.5)
+            end)
+        else
+            if crowdSound then
+                spawn(function()
+                    fadeVolume(crowdSound, 0, 0.5)
+                    crowdSound:Stop()
+                    crowdSound:Destroy()
+                    crowdSound = nil
+                end)
+            end
+        end
+        return
+    elseif effectName == "DynamicEQ" then
+        effect = Instance.new("EqualizerSoundEffect")
+        effect.LowGain = value * 2.5
+        effect.MidGain = value * 1
+        effect.HighGain = value * 2.5
+        spawn(function()
+            while currentSound and effectInstances.DynamicEQ do
+                effect.LowGain = value * 2.5 * (0.9 + 0.1 * math.sin(tick()))
+                effect.HighGain = value * 2.5 * (0.9 + 0.1 * math.cos(tick()))
+                wait(0.1)
+            end
+        end)
+    elseif effectName == "Vocoder" then
+        effectValues.Vocoder = value
+        spawn(function()
+            while currentSound and effectValues.Vocoder > 0 do
+                local mod = 1 + value * math.sin(tick() * 15) * 0.3
+                currentSound.PlaybackSpeed = desiredTempo * mod
+                wait(0.02)
+            end
+            if currentSound then
+                currentSound.PlaybackSpeed = desiredTempo
+            end
+        end)
+        return
+    end
+    if effect then
+        effect.Parent = currentSound
+        effectInstances[effectName] = effect
+    end
+end
+
+-- Audio Stats Simulation
+local function getAudioStats()
+    local volumeLevel = currentSound and currentSound.Volume * 10 or 0
+    local tempo = currentSound and currentSound.PlaybackSpeed or 1
+    local baseBPM = 120
+    local bpm = currentSound and (baseBPM * tempo) or baseBPM
+    return volumeLevel, tempo, bpm
+end
+
+-- Effect Presets
+local presets = {
+    BassBoost = {
+        Reverb = 0.2, Echo = 0, Equalizer = 0.8, Chorus = 0, Flanger = 0,
+        Distortion = 0.3, Phaser = 0, PitchShift = 0, Tremolo = 0, BitCrusher = 0,
+        TimeStretch = 1, Waveform = 0, Scratch = 0, FestivalVibes = 0,
+        DynamicEQ = 0.4, Vocoder = 0
+    },
+    VocalClarity = {
+        Reverb = 0.3, Echo = 0.1, Equalizer = 0.5, Chorus = 0.4, Flanger = 0,
+        Distortion = 0, Phaser = 0.2, PitchShift = 0.1, Tremolo = 0, BitCrusher = 0,
+        TimeStretch = 1, Waveform = 0, Scratch = 0, FestivalVibes = 0,
+        DynamicEQ = 0.2, Vocoder = 0.3
+    },
+    Ambient = {
+        Reverb = 0.7, Echo = 0.5, Equalizer = 0.3, Chorus = 0.6, Flanger = 0.2,
+        Distortion = 0, Phaser = 0.4, PitchShift = 0, Tremolo = 0.2, BitCrusher = 0,
+        TimeStretch = 1, Waveform = 0, Scratch = 0, FestivalVibes = 0,
+        DynamicEQ = 0.1, Vocoder = 0
+    },
+    Cyberpunk = {
+        Reverb = 0.3, Echo = 0.2, Equalizer = 0.6, Chorus = 0.2, Flanger = 0.3,
+        Distortion = 0.4, Phaser = 0.5, PitchShift = -0.2, Tremolo = 0.3, BitCrusher = 0.4,
+        TimeStretch = 1, Waveform = 0.3, Scratch = 0, FestivalVibes = 0,
+        DynamicEQ = 0.3, Vocoder = 0.4
+    },
+    Festival = {
+        Reverb = 0.4, Echo = 0.2, Equalizer = 0.7, Chorus = 0.3, Flanger = 0.2,
+        Distortion = 0.2, Phaser = 0.3, PitchShift = 0, Tremolo = 0.2, BitCrusher = 0,
+        TimeStretch = 1.2, Waveform = 0.2, Scratch = 0, FestivalVibes = 0.8,
+        DynamicEQ = 0.5, Vocoder = 0
+    }
+}
+
+-- Dock Logic with Hologram Effect
+local isDocked = false
+dockButton.Activated:Connect(function()
+    isDocked = not isDocked
+    if isDocked then
+        TweenService:Create(mainFrame, TWEEN_SLOW, {Size = UDim2.new(0, 80, 0, 600), Rotation = 5}):Play()
+        musicFrame.Visible = false
+        controlFrame.Visible = false
+        effectFrame.Visible = false
+        playerFrame.Visible = false
+        settingsFrame.Visible = false
+        tabFrame.Visible = false
+        headerLabel.Text = "Holo"
+        dockButton.Text = "►"
+    else
+        TweenService:Create(mainFrame, TWEEN_SLOW, {Size = FRAME_SIZE, Rotation = 0}):Play()
+        musicFrame.Visible = true
+        tabFrame.Visible = true
+        headerLabel.Text = "HoloCore Audio"
+        dockButton.Text = "◄"
+    end
+    showStatus(isDocked and "Docked to HoloCore" or "Expanded Matrix", Color3.fromRGB(50, 255, 50))
+end)
+
+-- Music Section
+createButton("Stop Audio", musicScroll, function()
+    -- Fixed: Comprehensive audio cleanup
+    if currentSound then
+        if settings.fadeOutTime > 0 then
+            fadeVolume(currentSound, 0, settings.fadeOutTime)
+        end
+        currentSound:Stop()
+        currentSound:Destroy()
+        currentSound = nil
+    end
+    if nextSound then
+        nextSound:Stop()
+        nextSound:Destroy()
+        nextSound = nil
+    end
+    if crowdSound then
+        if settings.fadeOutTime > 0 then
+            fadeVolume(crowdSound, 0, settings.fadeOutTime)
+        end
+        crowdSound:Stop()
+        crowdSound:Destroy()
+        crowdSound = nil
+    end
+    -- Clear all effects
+    for effectName, instance in pairs(effectInstances) do
+        if instance then
+            instance:Destroy()
+        end
+    end
+    effectInstances = {}
+    -- Reset effect loops
+    effectValues.Tremolo = 0
+    effectValues.BitCrusher = 0
+    effectValues.Scratch = 0
+    effectValues.FestivalVibes = 0
+    effectValues.Vocoder = 0
+    currentTime = 0
+    isPaused = false
+    showStatus("Audio Stopped")
+end, "Stops all audio")
+
+createButton("EDM", musicScroll, function()
+    playSound("5712170177", 1, "EDM")
+end, "Plays EDM track")
+createButton("Cookies3 (1)", musicScroll, function()
+    playSound("467930343", 1, "Cookies3 (1)")
+end, "Plays Cookies3 track 1")
+createButton("Cookies3 (2)", musicScroll, function()
+    playSound("9072358844", 1, "Cookies3 (2)")
+end, "Plays Cookies3 track 2")
+createButton("Rameses 2", musicScroll, function()
+    playSound("9072359933", 1, "Rameses 2")
+end, "Plays Rameses 2 track")
+
+-- Control Section
+local tempoSlider, tempoLabel = createSlider("Tempo (0.5–2)", 0.5, 2, controlScroll, function(value)
+    desiredTempo = value
+    if currentSound then
+        currentSound.PlaybackSpeed = value
+        if effectValues.TimeStretch ~= 1 then
+            applyEffect("TimeStretch", effectValues.TimeStretch)
+        end
+    end
+end, "Adjusts playback speed and BPM")
+tempoLabel.Text = "1.00"
+
+local volumeSlider, volumeLabel = createSlider("Volume (0–10)", 0, 10, controlScroll, function(value)
+    desiredVolume = value
+    if currentSound then
+        currentSound.Volume = value
+    end
+end, "Controls audio loudness")
+volumeLabel.Text = "1.00"
+
+-- Audio Stats Display
+local statsFrame = Instance.new("Frame")
+statsFrame.Size = UDim2.new(1, -10, 0, 100)
+statsFrame.BackgroundTransparency = 1
+statsFrame.Parent = controlScroll
+statsFrame.LayoutOrder = 2
+
+local statsLabel = Instance.new("TextLabel")
+statsLabel.Size = UDim2.new(1, 0, 1, 0)
+statsLabel.BackgroundTransparency = 1
+statsLabel.Text = "Volume: 0 | Tempo: 1 | BPM: 120"
+statsLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statsLabel.TextSize = 14
+statsLabel.Font = Enum.Font.Code
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+statsLabel.Parent = statsFrame
+
+spawn(function()
+    while true do
+        local vol, tempo, bpm = getAudioStats()
+        statsLabel.Text = string.format("Volume: %.1f | Tempo: %.2f | BPM: %.0f", vol, tempo, bpm)
+        wait(0.5)
+    end
+end)
+
+-- Effect Section
+local spectrumFrame = Instance.new("Frame")
+spectrumFrame.Size = UDim2.new(1, -10, 0, 80)
+spectrumFrame.BackgroundTransparency = 1
+spectrumFrame.Parent = effectScroll
+spectrumFrame.LayoutOrder = 0
+
+local function updateSpectrum()
+    local effectOrder = {
+        "Reverb", "Echo", "Equalizer", "Chorus", "Flanger",
+        "Distortion", "Phaser", "PitchShift", "Tremolo", "BitCrusher",
+        "TimeStretch", "Waveform", "Scratch", "FestivalVibes",
+        "DynamicEQ", "Vocoder"
+    }
+    for i = 1, 16 do
+        local bar = spectrumFrame:FindFirstChild("SpecBar" .. i)
+        if not bar then
+            bar = Instance.new("Frame")
+            bar.Name = "SpecBar" .. i
+            bar.Size = UDim2.new(0.055, 0, 0, 20)
+            bar.Position = UDim2.new(0.0625 * (i - 1), 0, 0.5, 0)
+            bar.BackgroundColor3 = neonColors[(i % #neonColors) + 1]
+            bar.BackgroundTransparency = 0.5
+            bar.Parent = spectrumFrame
+        end
+        local intensity = effectValues[effectOrder[i]] or 0
+        if effectOrder[i] == "PitchShift" then
+            intensity = math.abs(intensity) * 0.5
+        elseif effectOrder[i] == "TimeStretch" then
+            intensity = math.abs(intensity - 1) * 0.5
+        end
+        TweenService:Create(bar, TWEEN_FAST, {Size = UDim2.new(0.055, 0, 0, 20 + intensity * 40)}):Play()
+    end
+end
+
+for _, effectName in ipairs({
+    "Reverb", "Echo", "Equalizer", "Chorus", "Flanger",
+    "Distortion", "Phaser", "PitchShift", "Tremolo", "BitCrusher",
+    "TimeStretch", "Waveform", "Scratch", "FestivalVibes",
+    "DynamicEQ", "Vocoder"
+}) do
+    createSlider(
+        effectName .. " Intensity" .. (effectName == "PitchShift" and " (-1–1)" or effectName == "TimeStretch" and " (0.5–2)" or " (0–1)"),
+        effectName == "PitchShift" and -1 or effectName == "TimeStretch" and 0.5 or 0,
+        effectName == "TimeStretch" and 2 or 1,
+        effectScroll,
+        function(value)
+            effectValues[effectName] = value
+            applyEffect(effectName, value)
+            updateSpectrum()
+            customPreset[effectName] = value
+        end,
+        "Adjusts " .. effectName:lower() .. " effect strength"
+    )
+end
+
+-- Effect Presets
+local presetFrame = Instance.new("Frame")
+presetFrame.Size = UDim2.new(1, -10, 0, 180)
+presetFrame.BackgroundTransparency = 1
+presetFrame.Parent = effectScroll
+presetFrame.LayoutOrder = 17
+
+local presetList = Instance.new("UIListLayout")
+presetList.Padding = UDim.new(0, 5)
+presetList.Parent = presetFrame
+
+for name, preset in pairs(presets) do
+    createButton(name, presetFrame, function()
+        for effectName, value in pairs(preset) do
+            effectValues[effectName] = value
+            applyEffect(effectName, value)
+            local sliderName = effectName .. " Intensity" .. (effectName == "PitchShift" and " (-1–1)" or effectName == "TimeStretch" and " (0.5–2)" or " (0–1)")
+            local slider = effectScroll:FindFirstChild(sliderName)
+            if slider then
+                local knob = slider:FindFirstChild("Frame", true):FindFirstChild("Frame")
+                local fill = knob.Parent:FindFirstChild("Frame")
+                local label = slider:FindFirstChild("TextLabel", true)
+                local relative = effectName == "PitchShift" and (value + 1) / 2 or
+                                effectName == "TimeStretch" and (value - 0.5) / 1.5 or value
+                TweenService:Create(knob, TWEEN_FAST, {Position = UDim2.new(relative, -8, 0.5, -8)}):Play()
+                TweenService:Create(fill, TWEEN_FAST, {Size = UDim2.new(relative, 0, 1, 0)}):Play()
+                label.Text = string.format("%.2f", value)
+            end
+        end
+        updateSpectrum()
+        showStatus("Applied " .. name .. " Preset", Color3.fromRGB(50, 255, 50))
+    end, "Loads " .. name .. " effect preset")
+end
+
+createButton("Save Custom", presetFrame, function()
+    for k, v in pairs(effectValues) do
+        customPreset[k] = v
+    end
+    showStatus("Custom Preset Saved", Color3.fromRGB(50, 255, 50))
+end, "Saves current effect settings")
+
+createButton("Load Custom", presetFrame, function()
+    for effectName, value in pairs(customPreset) do
+        effectValues[effectName] = value
+        applyEffect(effectName, value)
+        local sliderName = effectName .. " Intensity" .. (effectName == "PitchShift" and " (-1–1)" or effectName == "TimeStretch" and " (0.5–2)" or " (0–1)")
+        local slider = effectScroll:FindFirstChild(sliderName)
+        if slider then
+            local knob = slider:FindFirstChild("Frame", true):FindFirstChild("Frame")
+            local fill = knob.Parent:FindFirstChild("Frame")
+            local label = slider:FindFirstChild("TextLabel", true)
+            local relative = effectName == "PitchShift" and (value + 1) / 2 or
+                            effectName == "TimeStretch" and (value - 0.5) / 1.5 or value
+            TweenService:Create(knob, TWEEN_FAST, {Position = UDim2.new(relative, -8, 0.5, -8)}):Play()
+            TweenService:Create(fill, TWEEN_FAST, {Size = UDim2.new(relative, 0, 1, 0)}):Play()
+            label.Text = string.format("%.2f", value)
+        end
+    end
+    updateSpectrum()
+    showStatus("Custom Preset Loaded", Color3.fromRGB(50, 255, 50))
+end, "Loads saved custom preset")
+
+-- Crossfade Next Button
+createButton("Crossfade Next", effectScroll, function()
+    if #playlist > 1 then
+        local nextId = playlist[2]
+        crossfadeSound(nextId, desiredVolume, "Playlist Track")
+    else
+        showStatus("No next track in playlist", Color3.fromRGB(255, 50, 50))
+    end
+end, "Crossfades to next playlist track")
+
+-- Player Section
+local playerInputFrame = Instance.new("Frame")
+playerInputFrame.Size = UDim2.new(1, -10, 0, 40)
+playerInputFrame.BackgroundTransparency = 1
+playerInputFrame.Parent = playerScroll
+playerInputFrame.LayoutOrder = 0
+
+local inputBox = Instance.new("TextBox")
+inputBox.Size = UDim2.new(0.7, -5, 1, 0)
+inputBox.Position = UDim2.new(0, 0, 0, 0)
+inputBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+inputBox.BackgroundTransparency = 0.6
+inputBox.Text = ""
+inputBox.PlaceholderText = "Enter SoundId (e.g., 1839246711)"
+inputBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+inputBox.TextSize = 16
+inputBox.Font = Enum.Font.Code
+inputBox.Parent = playerInputFrame
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = SMALL_CORNER
+inputCorner.Parent = inputBox
+
+local inputStroke = Instance.new("UIStroke")
+inputStroke.Thickness = 2
+inputStroke.Transparency = 0.4
+inputStroke.Parent = inputBox
+
+-- Neon Stroke Animation for TextBox
+spawn(function()
+    while inputBox.Parent do
+        for _, color in ipairs(neonColors) do
+            TweenService:Create(inputStroke, TWEEN_FAST, {Color = color, Transparency = 0.2}):Play()
+            wait(0.5)
+        end
+    end
+end)
+
+inputBox.Focused:Connect(function()
+    TweenService:Create(inputStroke, TWEEN_FAST, {Transparency = 0.1}):Play()
+end)
+inputBox.FocusLost:Connect(function()
+    TweenService:Create(inputStroke, TWEEN_FAST, {Transparency = 0.4}):Play()
+end)
+
+local playButtonFrame = Instance.new("Frame")
+playButtonFrame.Size = UDim2.new(0.3, -5, 1, 0)
+playButtonFrame.Position = UDim2.new(0.7, 5, 0, 0)
+playButtonFrame.BackgroundTransparency = 1
+playButtonFrame.Parent = playerInputFrame
+
+local playButton = Instance.new("TextButton")
+playButton.Size = UDim2.new(1, 0, 1, 0)
+playButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+playButton.BackgroundTransparency = 0.6
+playButton.Text = "Play Audio"
+playButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+playButton.TextSize = 16
+playButton.Font = Enum.Font.Code
+playButton.Parent = playButtonFrame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = SMALL_CORNER
+btnCorner.Parent = playButton
+
+local btnStroke = Instance.new("UIStroke")
+btnStroke.Thickness = 2
+btnStroke.Transparency = 0.4
+btnStroke.Parent = playButton
+
+-- Neon Stroke Animation
+spawn(function()
+    while playButton.Parent do
+        for _, color in ipairs(neonColors) do
+            TweenService:Create(btnStroke, TWEEN_FAST, {Color = color, Transparency = 0.2}):Play()
+            wait(0.5)
+        end
+    end
+end)
+
+-- Ripple Effect
+local ripple = Instance.new("Frame")
+ripple.Size = UDim2.new(0, 0, 0, 0)
+ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
+ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ripple.BackgroundTransparency = 1
+ripple.ZIndex = playButton.ZIndex + 1
+ripple.Parent = playButton
+
+local rippleCorner = Instance.new("UICorner")
+rippleCorner.CornerRadius = UDim.new(0, 25)
+rippleCorner.Parent = ripple
+
+playButton.MouseEnter:Connect(function()
+    TweenService:Create(playButton, TWEEN_FAST, {BackgroundTransparency = 0.4}):Play()
+    TweenService:Create(btnStroke, TWEEN_FAST, {Transparency = 0.2}):Play()
+end)
+playButton.MouseLeave:Connect(function()
+    TweenService:Create(playButton, TWEEN_FAST, {BackgroundTransparency = 0.6}):Play()
+    TweenService:Create(btnStroke, TWEEN_FAST, {Transparency = 0.4}):Play()
+end)
+playButton.Activated:Connect(function()
+    local click = Instance.new("Sound")
+    click.SoundId = "rbxasset://sounds/uuhhh.wav"
+    click.Volume = 0.3
+    click.Parent = playButton
+    click:Play()
+    click.Ended:Connect(function() click:Destroy() end)
+    ripple.Size = UDim2.new(0, 0, 0, 0)
+    ripple.BackgroundTransparency = 0.5
+    TweenService:Create(ripple, TWEEN_FAST, {Size = UDim2.new(0, 100, 0, 100), BackgroundTransparency = 1}):Play()
+    emitParticles(playButton, 5)
+    local success = playSound(inputBox.Text, desiredVolume, "Custom")
+    if not success then
+        TweenService:Create(inputStroke, TWEEN_FAST, {Color = Color3.fromRGB(255, 50, 50)}):Play()
+        wait(0.5)
+        TweenService:Create(inputStroke, TWEEN_FAST, {Color = neonColors[1]}):Play()
+    else
+        for i, id in ipairs(playlist) do
+            local btn = playerScroll:FindFirstChild("Playlist" .. i)
+            if btn then
+                btn.TextButton.Text = "ID: " .. id
+            end
+        end
+    end
+end)
+
+-- Advanced Player Controls
+local playerControlsFrame = Instance.new("Frame")
+playerControlsFrame.Size = UDim2.new(1, -10, 0, 328) -- Fixed: Increased height to fit all controls (2 buttons * 50 + 3 sliders * 60 + 4 gaps * 12)
+playerControlsFrame.BackgroundTransparency = 1
+playerControlsFrame.Parent = playerScroll
+playerControlsFrame.LayoutOrder = 1
+
+local controlsList = Instance.new("UIListLayout")
+controlsList.Padding = UDim.new(0, PADDING)
+controlsList.Parent = playerControlsFrame
+
+local pauseButton = createButton(isPaused and "Resume" or "Pause", playerControlsFrame, function()
+    if currentSound then
+        if isPaused then
+            currentSound:Resume()
+            isPaused = false
+            pauseButton.TextButton.Text = "Pause"
+            showStatus("Resumed")
+        else
+            currentSound:Pause()
+            isPaused = true
+            pauseButton.TextButton.Text = "Resume"
+            showStatus("Paused")
+        end
+    end
+end, "Pauses or resumes audio")
+pauseButton.LayoutOrder = 1
+
+local loopButton = createButton(isLooped and "Loop: On" or "Loop: Off", playerControlsFrame, function()
+    isLooped = not isLooped
+    if currentSound then
+        currentSound.Looped = isLooped
+    end
+    loopButton.TextButton.Text = isLooped and "Loop: On" or "Loop: Off"
+    showStatus("Loop " .. (isLooped and "Enabled" or "Disabled"))
+end, "Toggles audio looping")
+loopButton.LayoutOrder = 2
+
+local seekSlider, seekLabel = createSlider("Seek (0–60s)", 0, 60, playerControlsFrame, function(value)
+    currentTime = value
+    if currentSound then
+        currentSound.TimePosition = value
+    end
+end, "Scrubs audio position")
+seekSlider.LayoutOrder = 3
+seekLabel.Text = "0.00"
+
+local fadeInSlider, fadeInLabel = createSlider("Fade In (0–5s)", 0, 5, playerControlsFrame, function(value)
+    settings.fadeInTime = value
+    showStatus("Fade-in set to " .. value .. "s")
+end, "Sets audio fade-in duration")
+fadeInSlider.LayoutOrder = 4
+fadeInLabel.Text = "1.00"
+
+local fadeOutSlider, fadeOutLabel = createSlider("Fade Out (0–5s)", 0, 5, playerControlsFrame, function(value)
+    settings.fadeOutTime = value
+    showStatus("Fade-out set to " .. value .. "s")
+end, "Sets audio fade-out duration")
+fadeOutSlider.LayoutOrder = 5
+fadeOutLabel.Text = "1.00"
+
+spawn(function()
+    while true do
+        if currentSound and not isPaused then
+            currentTime = currentSound.TimePosition
+            local relative = math.clamp(currentTime / 60, 0, 1)
+            local knob = seekSlider:FindFirstChild("Frame", true):FindFirstChild("Frame")
+            local fill = knob.Parent:FindFirstChild("Frame")
+            TweenService:Create(knob, TWEEN_FAST, {Position = UDim2.new(relative, -8, 0.5, -8)}):Play()
+            TweenService:Create(fill, TWEEN_FAST, {Size = UDim2.new(relative, 0, 1, 0)}):Play()
+            seekLabel.Text = string.format("%.2f", currentTime)
+        end
+        wait(0.1)
+    end
+end)
+
+-- Playlist
+local playlistFrame = Instance.new("Frame")
+playlistFrame.Size = UDim2.new(1, -10, 0, 200)
+playlistFrame.BackgroundTransparency = 1
+playlistFrame.Parent = playerScroll
+playlistFrame.LayoutOrder = 2
+
+local playlistList = Instance.new("UIListLayout")
+playlistList.Padding = UDim.new(0, 5)
+playlistList.Parent = playlistFrame
+
+for i = 1, 5 do
+    createButton("ID: Empty", playlistFrame, function()
+        if playlist[i] then
+            playSound(playlist[i], desiredVolume, "Playlist " .. i)
+        end
+    end, "Plays recent SoundId")
+    local btn = playlistFrame:GetChildren()[i + 1]
+    btn.Name = "Playlist" .. i
+end
+
+-- Settings Section
+createSlider("Neon Intensity (0–2)", 0, 2, settingsScroll, function(value)
+    settings.neonIntensity = value
+end, "Adjusts neon color brightness")
+
+createButton("Toggle Glitch", settingsScroll, function()
+    settings.glitchEnabled = not settings.glitchEnabled
+    glitchGradient.Enabled = settings.glitchEnabled
+    showStatus("Glitch " .. (settings.glitchEnabled and "Enabled" or "Disabled"))
+end, "Toggles glitch background")
+
+createButton("Toggle Debug", settingsScroll, function()
+    settings.debugMode = not settings.debugMode
+    showStatus("Debug " .. (settings.debugMode and "Enabled" or "Disabled"))
+end, "Toggles debug mode (pauses visualizer)")
+
+-- Initial Canvas Updates
+updateCanvasSize(musicScroll)
+updateCanvasSize(controlScroll)
+updateCanvasSize(effectScroll)
+updateCanvasSize(playerScroll)
+updateCanvasSize(settingsScroll)
+updateSpectrum()
+
+-- Comments for Advanced Features
+-- ASI-level cyberpunk GUI with dynamic audio control
+-- Fixed: Audio stopper bug by ensuring immediate cleanup of currentSound, nextSound, crowdSound
+-- Fixed: Loop button rendering issue by adjusting playerControlsFrame layout and explicit LayoutOrder
+-- Fixed: Fade In slider rendering below playlist buttons by increasing playerControlsFrame height to 328
+-- Features: Volume fade (in/out 0–5s), tempo control (0.5–2x), time stretching (0.5–2x),
+-- crossfade (fixed 3s in Effects tab), spectrum analyzers (per effect), waveform effect (visual noise),
+-- scratch effect (DJ-style), festival vibes (bass + crowd)
+-- Effects: Reverb, Echo, Equalizer, Chorus, Flanger, Distortion, Phaser, PitchShift,
+-- Tremolo, BitCrusher, TimeStretch, Waveform, Scratch, FestivalVibes, DynamicEQ, Vocoder
+-- Visualizer: Jagged bars (Distortion)
