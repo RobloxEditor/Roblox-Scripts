@@ -2,7 +2,7 @@
 -- ASI-level cyberpunk holographic GUI with fixed audio stopper bug, corrected Loop button rendering, fixed Fade In slider rendering
 -- Added: Mobile/touch support for dragging (header) and sliders (knob interaction via UserInputService)
 
--- Services
+-- Service
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
