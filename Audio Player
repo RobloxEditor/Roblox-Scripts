@@ -1,0 +1,1289 @@
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+local player = Players.LocalPlayer
+
+local MusicList = {
+    {Name = "Audio 2", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/audio%202.mp3"},
+    {Name = "Vyrval (Super Slowed)", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/vyrval%20-%20%E2%9C%BBH%2B3%2B%D0%AF%D0%94%E2%9C%BB7luCJIo0T6...%20(second%20drop%20%2B%20super%20slowed).mp3"},
+    {Name = "Light Flash", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/Light%20flash.mp3"},
+    {Name = "Moonlight Echo", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/Moonlight%20Echo%20(2).mp3"},
+    {Name = "NEBLINA (Phonk)", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/NEBLINA!%20(Brazilian%20Phonk).mp3"},
+    {Name = "Violin", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/Violin.mp3"},
+    {Name = "Dusk Till Dawn", Url = "https://raw.githubusercontent.com/RobloxEditor/Music-test/refs/heads/main/ZAYN%20%20Sia%20-%20Dusk%20Till%20Dawn%20Lyrics%204.mp3"},
+}
+
+local currentSound = nil
+local currentIndex = 1
+local eqEnabled = true
+local isPlaying = false
+local shuffleEnabled = false
+local repeatEnabled = false
+local songButtons = {}
+local settingsFrame
+local applyTheme
+
+-- ====================== PALETTE ======================
+local COL_BG        = Color3.fromRGB(18, 18, 22)
+local COL_PANEL     = Color3.fromRGB(26, 26, 32)
+local COL_PANEL_ALT = Color3.fromRGB(33, 33, 40)
+local COL_ACCENT    = Color3.fromRGB(120, 90, 255)
+local COL_ACCENT_HI = Color3.fromRGB(150, 120, 255)
+local COL_TEXT      = Color3.fromRGB(235, 235, 245)
+local COL_SUBTEXT   = Color3.fromRGB(150, 150, 165)
+local COL_DANGER    = Color3.fromRGB(220, 70, 70)
+local COL_OK        = Color3.fromRGB(90, 210, 130)
+
+local Themes = {
+    Minimal = {
+        displayName = "Minimal",
+        BG = Color3.fromRGB(18, 18, 22),
+        PANEL = Color3.fromRGB(26, 26, 32),
+        PANEL_ALT = Color3.fromRGB(33, 33, 40),
+        ACCENT = Color3.fromRGB(120, 90, 255),
+        ACCENT_HI = Color3.fromRGB(150, 120, 255),
+        TEXT = Color3.fromRGB(235, 235, 245),
+        SUBTEXT = Color3.fromRGB(150, 150, 165),
+        DANGER = Color3.fromRGB(220, 70, 70),
+        OK = Color3.fromRGB(90, 210, 130),
+        borderColor = Color3.fromRGB(90, 90, 110),
+        borderThickness = 1,
+        borderTransparency = 0.4,
+        panelTransparency = 0,
+        blur = 0,
+        titleGradient = "panel",
+        swatchColors = {Color3.fromRGB(26, 26, 32), Color3.fromRGB(120, 90, 255)},
+    },
+    Neon = {
+        displayName = "Neon",
+        BG = Color3.fromRGB(8, 8, 14),
+        PANEL = Color3.fromRGB(14, 16, 24),
+        PANEL_ALT = Color3.fromRGB(20, 24, 34),
+        ACCENT = Color3.fromRGB(0, 255, 200),
+        ACCENT_HI = Color3.fromRGB(255, 0, 200),
+        TEXT = Color3.fromRGB(235, 255, 250),
+        SUBTEXT = Color3.fromRGB(120, 210, 200),
+        DANGER = Color3.fromRGB(255, 45, 85),
+        OK = Color3.fromRGB(80, 255, 160),
+        borderColor = Color3.fromRGB(0, 255, 200),
+        borderThickness = 2,
+        borderTransparency = 0.05,
+        panelTransparency = 0,
+        blur = 0,
+        titleGradient = "accent",
+        swatchColors = {Color3.fromRGB(0, 255, 200), Color3.fromRGB(255, 0, 200)},
+    },
+    Glass = {
+        displayName = "Glass",
+        BG = Color3.fromRGB(45, 52, 68),
+        PANEL = Color3.fromRGB(60, 68, 88),
+        PANEL_ALT = Color3.fromRGB(75, 84, 106),
+        ACCENT = Color3.fromRGB(140, 200, 255),
+        ACCENT_HI = Color3.fromRGB(200, 230, 255),
+        TEXT = Color3.fromRGB(245, 250, 255),
+        SUBTEXT = Color3.fromRGB(200, 215, 230),
+        DANGER = Color3.fromRGB(255, 120, 120),
+        OK = Color3.fromRGB(140, 230, 185),
+        borderColor = Color3.fromRGB(200, 230, 255),
+        borderThickness = 1,
+        borderTransparency = 0.25,
+        panelTransparency = 0.32,
+        blur = 18,
+        titleGradient = "panel",
+        swatchColors = {Color3.fromRGB(140, 200, 255), Color3.fromRGB(200, 230, 255)},
+    },
+    Vibrant = {
+        displayName = "Vibrant",
+        BG = Color3.fromRGB(22, 16, 30),
+        PANEL = Color3.fromRGB(34, 26, 46),
+        PANEL_ALT = Color3.fromRGB(46, 34, 60),
+        ACCENT = Color3.fromRGB(255, 80, 160),
+        ACCENT_HI = Color3.fromRGB(255, 190, 60),
+        TEXT = Color3.fromRGB(255, 250, 250),
+        SUBTEXT = Color3.fromRGB(220, 190, 215),
+        DANGER = Color3.fromRGB(255, 70, 110),
+        OK = Color3.fromRGB(120, 230, 150),
+        borderColor = Color3.fromRGB(255, 80, 160),
+        borderThickness = 1.5,
+        borderTransparency = 0.15,
+        panelTransparency = 0,
+        blur = 0,
+        titleGradient = "accent",
+        swatchColors = {Color3.fromRGB(255, 80, 160), Color3.fromRGB(255, 190, 60)},
+    },
+}
+
+local currentThemeKey = "Minimal"
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MusicPlayer"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ====================== HELPERS ======================
+local function corner(parent, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 10)
+    c.Parent = parent
+    return c
+end
+
+local function stroke(parent, color, thickness)
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(70, 70, 85)
+    s.Thickness = thickness or 1
+    s.Transparency = 0.4
+    s.Parent = parent
+    return s
+end
+
+local function gradient(parent, c1, c2, rotation)
+    local g = Instance.new("UIGradient")
+    g.Color = ColorSequence.new(c1, c2)
+    g.Rotation = rotation or 90
+    g.Parent = parent
+    return g
+end
+
+local function tween(obj, props, time, style)
+    TweenService:Create(obj, TweenInfo.new(time or 0.18, style or Enum.EasingStyle.Quad), props):Play()
+end
+
+local function hoverEffect(btn, baseColorFn, hoverColorFn)
+    btn.MouseEnter:Connect(function() tween(btn, {BackgroundColor3 = hoverColorFn()}, 0.12) end)
+    btn.MouseLeave:Connect(function() tween(btn, {BackgroundColor3 = baseColorFn()}, 0.12) end)
+end
+
+local function setBackgroundBlur(amount)
+    local lighting = game:GetService("Lighting")
+    local blur = lighting:FindFirstChild("MusicPlayerBlur")
+    if amount and amount > 0 then
+        if not blur then
+            blur = Instance.new("BlurEffect")
+            blur.Name = "MusicPlayerBlur"
+            blur.Parent = lighting
+        end
+        blur.Size = amount
+    elseif blur then
+        blur:Destroy()
+    end
+end
+
+local function formatTime(seconds)
+    seconds = math.max(0, math.floor(seconds or 0))
+    local m = math.floor(seconds / 60)
+    local s = seconds % 60
+    return string.format("%d:%02d", m, s)
+end
+
+-- Add more extensions here later if you want to support other formats
+local SUPPORTED_AUDIO_EXTENSIONS = {"mp3"}
+
+local function getUrlExtension(url)
+    local lowerUrl = string.lower(url)
+    for _, ext in ipairs(SUPPORTED_AUDIO_EXTENSIONS) do
+        if string.sub(lowerUrl, -(#ext + 1)) == "." .. ext then
+            return ext
+        end
+    end
+    return nil
+end
+
+-- ====================== MAIN FRAME ======================
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 420, 0, 606)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -303)
+mainFrame.BackgroundColor3 = COL_BG
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = gui
+corner(mainFrame, 16)
+local mainFrameStroke = stroke(mainFrame, Color3.fromRGB(90, 90, 110), 1)
+
+-- subtle shadow
+local shadow = Instance.new("ImageLabel")
+shadow.Image = "rbxassetid://1316045217"
+shadow.ImageColor3 = Color3.new(0, 0, 0)
+shadow.ImageTransparency = 0.55
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.Size = UDim2.new(1, 60, 1, 60)
+shadow.Position = UDim2.new(0, -30, 0, -20)
+shadow.BackgroundTransparency = 1
+shadow.ZIndex = -1
+shadow.Parent = mainFrame
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 54)
+titleBar.BackgroundColor3 = COL_PANEL_ALT
+titleBar.Parent = mainFrame
+corner(titleBar, 16)
+local titleBarGradient = gradient(titleBar, COL_PANEL_ALT, COL_PANEL, 90)
+
+-- mask bottom corners of title bar
+local titleMask = Instance.new("Frame")
+titleMask.Size = UDim2.new(1, 0, 0, 16)
+titleMask.Position = UDim2.new(0, 0, 1, -16)
+titleMask.BackgroundColor3 = COL_PANEL_ALT
+titleMask.BorderSizePixel = 0
+titleMask.ZIndex = 0
+titleMask.Parent = titleBar
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -140, 1, 0)
+title.Position = UDim2.new(0, 16, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Music Player"
+title.TextColor3 = COL_TEXT
+title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Font = Enum.Font.GothamBold
+title.Parent = titleBar
+
+local function makeTitleButton(icon, posOffset, hoverColorFn)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 36, 0, 36)
+    btn.Position = UDim2.new(1, posOffset, 0.5, -18)
+    btn.BackgroundColor3 = COL_PANEL
+    btn.Text = icon
+    btn.TextColor3 = COL_TEXT
+    btn.TextSize = 14
+    btn.AutoButtonColor = false
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = titleBar
+    corner(btn, 9)
+    hoverEffect(btn, function() return COL_PANEL end, hoverColorFn)
+    return btn
+end
+
+local settingsBtn = makeTitleButton("SET", -88, function() return COL_PANEL_ALT end)
+local closeBtn = makeTitleButton("X", -46, function() return COL_DANGER end)
+
+-- Now Playing block
+local nowPlayingFrame = Instance.new("Frame")
+nowPlayingFrame.Size = UDim2.new(1, -24, 0, 60)
+nowPlayingFrame.Position = UDim2.new(0, 12, 0, 64)
+nowPlayingFrame.BackgroundColor3 = COL_PANEL
+nowPlayingFrame.Parent = mainFrame
+corner(nowPlayingFrame, 12)
+
+local nowPlayingLabel = Instance.new("TextLabel")
+nowPlayingLabel.Size = UDim2.new(0.5, 0, 0, 18)
+nowPlayingLabel.Position = UDim2.new(0, 12, 0, 8)
+nowPlayingLabel.BackgroundTransparency = 1
+nowPlayingLabel.Text = "NOW PLAYING"
+nowPlayingLabel.TextColor3 = COL_SUBTEXT
+nowPlayingLabel.TextSize = 11
+nowPlayingLabel.Font = Enum.Font.GothamBold
+nowPlayingLabel.TextXAlignment = Enum.TextXAlignment.Left
+nowPlayingLabel.Parent = nowPlayingFrame
+
+local timeLabel = Instance.new("TextLabel")
+timeLabel.Size = UDim2.new(0.5, -12, 0, 18)
+timeLabel.Position = UDim2.new(0.5, 0, 0, 8)
+timeLabel.BackgroundTransparency = 1
+timeLabel.Text = "0:00 / 0:00"
+timeLabel.TextColor3 = COL_SUBTEXT
+timeLabel.TextSize = 11
+timeLabel.Font = Enum.Font.GothamBold
+timeLabel.TextXAlignment = Enum.TextXAlignment.Right
+timeLabel.Parent = nowPlayingFrame
+
+local nowPlaying = Instance.new("TextLabel")
+nowPlaying.Size = UDim2.new(1, -24, 0, 24)
+nowPlaying.Position = UDim2.new(0, 12, 0, 26)
+nowPlaying.BackgroundTransparency = 1
+nowPlaying.Text = "Nothing Playing"
+nowPlaying.TextColor3 = COL_TEXT
+nowPlaying.TextSize = 16
+nowPlaying.Font = Enum.Font.GothamSemibold
+nowPlaying.TextXAlignment = Enum.TextXAlignment.Left
+nowPlaying.TextTruncate = Enum.TextTruncate.AtEnd
+nowPlaying.Parent = nowPlayingFrame
+
+-- Progress bar
+local progressBack = Instance.new("Frame")
+progressBack.Size = UDim2.new(1, -24, 0, 4)
+progressBack.Position = UDim2.new(0, 12, 1, -10)
+progressBack.BackgroundColor3 = COL_PANEL_ALT
+progressBack.Parent = nowPlayingFrame
+corner(progressBack, 2)
+
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = COL_ACCENT
+progressFill.Parent = progressBack
+corner(progressFill, 2)
+local progressGradient = gradient(progressFill, COL_ACCENT, COL_ACCENT_HI, 0)
+
+-- Search box
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(1, -24, 0, 36)
+searchBox.Position = UDim2.new(0, 12, 0, 132)
+searchBox.BackgroundColor3 = COL_PANEL
+searchBox.PlaceholderText = "Search songs..."
+searchBox.PlaceholderColor3 = COL_SUBTEXT
+searchBox.Text = ""
+searchBox.TextColor3 = COL_TEXT
+searchBox.TextSize = 14
+searchBox.Font = Enum.Font.Gotham
+searchBox.ClearTextOnFocus = false
+searchBox.Parent = mainFrame
+corner(searchBox, 10)
+
+local searchPad = Instance.new("UIPadding")
+searchPad.PaddingLeft = UDim.new(0, 12)
+searchPad.Parent = searchBox
+
+-- Custom MP3 link input
+local customUrlBox = Instance.new("TextBox")
+customUrlBox.Size = UDim2.new(0, 304, 0, 36)
+customUrlBox.Position = UDim2.new(0, 12, 0, 178)
+customUrlBox.BackgroundColor3 = COL_PANEL
+customUrlBox.PlaceholderText = "Paste a direct .mp3 link..."
+customUrlBox.PlaceholderColor3 = COL_SUBTEXT
+customUrlBox.Text = ""
+customUrlBox.TextColor3 = COL_TEXT
+customUrlBox.TextSize = 13
+customUrlBox.Font = Enum.Font.Gotham
+customUrlBox.ClearTextOnFocus = false
+customUrlBox.Parent = mainFrame
+corner(customUrlBox, 10)
+local customUrlStroke = stroke(customUrlBox, Color3.fromRGB(70, 70, 85), 1)
+
+local customUrlPad = Instance.new("UIPadding")
+customUrlPad.PaddingLeft = UDim.new(0, 12)
+customUrlPad.PaddingRight = UDim.new(0, 8)
+customUrlPad.Parent = customUrlBox
+
+local addUrlBtn = Instance.new("TextButton")
+addUrlBtn.Size = UDim2.new(0, 86, 0, 36)
+addUrlBtn.Position = UDim2.new(0, 322, 0, 178)
+addUrlBtn.BackgroundColor3 = COL_ACCENT
+addUrlBtn.AutoButtonColor = false
+addUrlBtn.Text = "Add"
+addUrlBtn.TextColor3 = COL_TEXT
+addUrlBtn.TextSize = 14
+addUrlBtn.Font = Enum.Font.GothamBold
+addUrlBtn.Parent = mainFrame
+corner(addUrlBtn, 10)
+hoverEffect(addUrlBtn, function() return COL_ACCENT end, function() return COL_ACCENT_HI end)
+
+-- Song List
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -24, 0, 240)
+scrollFrame.Position = UDim2.new(0, 12, 0, 224)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 4
+scrollFrame.ScrollBarImageColor3 = COL_ACCENT
+scrollFrame.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 6)
+listLayout.Parent = scrollFrame
+
+-- Volume slider
+local volFrame = Instance.new("Frame")
+volFrame.Size = UDim2.new(1, -24, 0, 28)
+volFrame.Position = UDim2.new(0, 12, 0, 472)
+volFrame.BackgroundTransparency = 1
+volFrame.Parent = mainFrame
+
+local volIcon = Instance.new("TextLabel")
+volIcon.Size = UDim2.new(0, 28, 1, 0)
+volIcon.BackgroundTransparency = 1
+volIcon.Text = "Vol"
+volIcon.TextColor3 = COL_SUBTEXT
+volIcon.TextSize = 11
+volIcon.Font = Enum.Font.GothamBold
+volIcon.Parent = volFrame
+
+local volTrack = Instance.new("Frame")
+volTrack.Size = UDim2.new(1, -38, 0, 4)
+volTrack.Position = UDim2.new(0, 34, 0.5, -2)
+volTrack.BackgroundColor3 = COL_PANEL
+volTrack.Parent = volFrame
+corner(volTrack, 2)
+
+local volFill = Instance.new("Frame")
+volFill.Size = UDim2.new(0.75, 0, 1, 0)
+volFill.BackgroundColor3 = COL_ACCENT
+volFill.Parent = volTrack
+corner(volFill, 2)
+
+local volKnob = Instance.new("TextButton")
+volKnob.Size = UDim2.new(0, 14, 0, 14)
+volKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+volKnob.Position = UDim2.new(0.75, 0, 0.5, 0)
+volKnob.BackgroundColor3 = COL_TEXT
+volKnob.Text = ""
+volKnob.Parent = volTrack
+corner(volKnob, 7)
+
+-- Controls
+local controlFrame = Instance.new("Frame")
+controlFrame.Size = UDim2.new(1, -24, 0, 56)
+controlFrame.Position = UDim2.new(0, 12, 0, 508)
+controlFrame.BackgroundTransparency = 1
+controlFrame.Parent = mainFrame
+
+local function makeControlButton(size, icon, posScale, posOffset, bgColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = size
+    btn.Position = UDim2.new(posScale, posOffset, 0, 0)
+    btn.AnchorPoint = Vector2.new(0.5, 0)
+    btn.Text = icon
+    btn.TextColor3 = COL_TEXT
+    btn.TextSize = 18
+    btn.AutoButtonColor = false
+    btn.BackgroundColor3 = bgColor
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = controlFrame
+    corner(btn, size.Y.Offset // 2)
+    return btn
+end
+
+local shuffleBtn = makeControlButton(UDim2.new(0, 40, 0, 40), "RND", 0.5, -150, COL_PANEL)
+local prevBtn     = makeControlButton(UDim2.new(0, 46, 0, 46), "<<", 0.5, -80, COL_PANEL)
+local playBtn     = makeControlButton(UDim2.new(0, 56, 0, 56), ">", 0.5, 0, COL_ACCENT)
+local nextBtn     = makeControlButton(UDim2.new(0, 46, 0, 46), ">>", 0.5, 80, COL_PANEL)
+local repeatBtn    = makeControlButton(UDim2.new(0, 40, 0, 40), "RPT", 0.5, 150, COL_PANEL)
+
+local playBtnGradient = gradient(playBtn, COL_ACCENT, COL_ACCENT_HI, 45)
+
+-- smaller text on the abbreviated icon buttons so the labels fit cleanly
+shuffleBtn.TextSize = 12
+repeatBtn.TextSize = 12
+
+hoverEffect(shuffleBtn, function() return COL_PANEL end, function() return COL_PANEL_ALT end)
+hoverEffect(prevBtn, function() return COL_PANEL end, function() return COL_PANEL_ALT end)
+hoverEffect(nextBtn, function() return COL_PANEL end, function() return COL_PANEL_ALT end)
+hoverEffect(repeatBtn, function() return COL_PANEL end, function() return COL_PANEL_ALT end)
+hoverEffect(playBtn, function() return COL_ACCENT end, function() return COL_ACCENT_HI end)
+
+-- ====================== DRAGGABLE (clamped) ======================
+local dragging, dragStart, startPos
+
+local function clampToScreen()
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local pos = mainFrame.AbsolutePosition
+    local size = mainFrame.AbsoluteSize
+    local x = math.clamp(pos.X, 0, math.max(0, viewport.X - size.X))
+    local y = math.clamp(pos.Y, 0, math.max(0, viewport.Y - size.Y))
+    mainFrame.Position = UDim2.new(0, x, 0, y)
+end
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then clampToScreen() end
+        dragging = false
+    end
+end)
+
+-- ====================== LEFT-SIDE TOGGLE TAB ======================
+local uiVisible = true
+
+local tabBtn = Instance.new("TextButton")
+tabBtn.Size = UDim2.new(0, 28, 0, 70)
+tabBtn.AnchorPoint = Vector2.new(0, 0.5)
+tabBtn.Position = UDim2.new(0, 0, 0.5, 0)
+tabBtn.BackgroundColor3 = COL_PANEL_ALT
+tabBtn.AutoButtonColor = false
+tabBtn.Text = "M"
+tabBtn.TextColor3 = COL_TEXT
+tabBtn.TextSize = 14
+tabBtn.Font = Enum.Font.GothamBold
+tabBtn.ZIndex = 30
+tabBtn.Parent = gui
+
+local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0, 8)
+tabCorner.Parent = tabBtn
+
+-- only round the right-side corners (mask the left side)
+local tabMask = Instance.new("Frame")
+tabMask.Size = UDim2.new(0, 8, 1, 0)
+tabMask.Position = UDim2.new(0, 0, 0, 0)
+tabMask.BackgroundColor3 = COL_PANEL_ALT
+tabMask.BorderSizePixel = 0
+tabMask.ZIndex = 30
+tabMask.Parent = tabBtn
+
+local tabBtnStroke = stroke(tabBtn, Color3.fromRGB(90, 90, 110), 1)
+hoverEffect(tabBtn, function() return COL_PANEL_ALT end, function() return COL_ACCENT end)
+
+-- ====================== MINI PLAYER (hide full UI, music keeps playing) ======================
+local miniPlayer = Instance.new("Frame")
+miniPlayer.Size = UDim2.new(0, 260, 0, 56)
+miniPlayer.Position = UDim2.new(0.5, -130, 1, -76)
+miniPlayer.BackgroundColor3 = COL_PANEL_ALT
+miniPlayer.Visible = false
+miniPlayer.ZIndex = 25
+miniPlayer.Parent = gui
+corner(miniPlayer, 14)
+local miniPlayerStroke = stroke(miniPlayer, Color3.fromRGB(90, 90, 110), 1)
+
+local miniLabel = Instance.new("TextLabel")
+miniLabel.Size = UDim2.new(1, -120, 1, 0)
+miniLabel.Position = UDim2.new(0, 14, 0, 0)
+miniLabel.BackgroundTransparency = 1
+miniLabel.Text = "Nothing Playing"
+miniLabel.TextColor3 = COL_TEXT
+miniLabel.TextSize = 13
+miniLabel.Font = Enum.Font.GothamSemibold
+miniLabel.TextXAlignment = Enum.TextXAlignment.Left
+miniLabel.TextTruncate = Enum.TextTruncate.AtEnd
+miniLabel.ZIndex = 25
+miniLabel.Parent = miniPlayer
+
+local miniPlayBtn = Instance.new("TextButton")
+miniPlayBtn.Size = UDim2.new(0, 40, 0, 40)
+miniPlayBtn.Position = UDim2.new(1, -94, 0.5, -20)
+miniPlayBtn.BackgroundColor3 = COL_ACCENT
+miniPlayBtn.AutoButtonColor = false
+miniPlayBtn.Text = "||"
+miniPlayBtn.TextColor3 = COL_TEXT
+miniPlayBtn.TextSize = 16
+miniPlayBtn.Font = Enum.Font.GothamBold
+miniPlayBtn.ZIndex = 25
+miniPlayBtn.Parent = miniPlayer
+corner(miniPlayBtn, 20)
+hoverEffect(miniPlayBtn, function() return COL_ACCENT end, function() return COL_ACCENT_HI end)
+
+local miniExpandBtn = Instance.new("TextButton")
+miniExpandBtn.Size = UDim2.new(0, 36, 0, 36)
+miniExpandBtn.Position = UDim2.new(1, -46, 0.5, -18)
+miniExpandBtn.BackgroundColor3 = COL_PANEL
+miniExpandBtn.AutoButtonColor = false
+miniExpandBtn.Text = "^"
+miniExpandBtn.TextColor3 = COL_TEXT
+miniExpandBtn.TextSize = 16
+miniExpandBtn.Font = Enum.Font.GothamBold
+miniExpandBtn.ZIndex = 25
+miniExpandBtn.Parent = miniPlayer
+corner(miniExpandBtn, 10)
+hoverEffect(miniExpandBtn, function() return COL_PANEL end, function() return COL_PANEL_ALT end)
+
+local function setUIVisible(state)
+    uiVisible = state
+    if uiVisible then
+        mainFrame.Visible = true
+        mainFrame.Size = UDim2.new(0, 420, 0, 0)
+        tween(mainFrame, {Size = UDim2.new(0, 420, 0, 606)}, 0.25, Enum.EasingStyle.Quint)
+        tabBtn.Text = "X"
+        miniPlayer.Visible = false
+    else
+        tween(mainFrame, {Size = UDim2.new(0, 420, 0, 0)}, 0.2, Enum.EasingStyle.Quint)
+        settingsFrame.Visible = false
+        task.delay(0.2, function()
+            if not uiVisible then mainFrame.Visible = false end
+        end)
+        tabBtn.Text = "M"
+        miniPlayer.Visible = true
+    end
+end
+
+miniExpandBtn.MouseButton1Click:Connect(function()
+    setUIVisible(true)
+end)
+
+local function toggleUI()
+    setUIVisible(not uiVisible)
+end
+
+tabBtn.MouseButton1Click:Connect(toggleUI)
+
+-- update close button to hide instead of destroy, so the tab can bring it back
+closeBtn.MouseButton1Click:Connect(function()
+    setUIVisible(false)
+end)
+
+-- ====================== CHAT COMMANDS (;openui / ;closeui) ======================
+local function handleChatCommand(message)
+    local msg = string.lower(string.gsub(message, "^%s+", ""))
+    if msg == ";openui" then
+        setUIVisible(true)
+    elseif msg == ";closeui" then
+        setUIVisible(false)
+    elseif msg == ";toggleui" then
+        toggleUI()
+    end
+end
+
+-- Legacy chat event (works on most games/executors)
+player.Chatted:Connect(handleChatCommand)
+
+-- TextChatService support (newer Roblox chat system)
+local tcsSuccess, TextChatService = pcall(function()
+    return game:GetService("TextChatService")
+end)
+if tcsSuccess and TextChatService then
+    TextChatService.SendingMessage:Connect(function(textChatMessage)
+        handleChatCommand(textChatMessage.Text)
+    end)
+end
+
+-- ====================== SETTINGS PANEL ======================
+settingsFrame = Instance.new("Frame")
+settingsFrame.Size = UDim2.new(0, 360, 0, 424)
+settingsFrame.Position = UDim2.new(0.5, -180, 0.5, -212)
+settingsFrame.BackgroundColor3 = COL_BG
+settingsFrame.Visible = false
+settingsFrame.ZIndex = 20
+settingsFrame.Parent = gui
+corner(settingsFrame, 16)
+local settingsFrameStroke = stroke(settingsFrame, Color3.fromRGB(100, 100, 120), 1)
+
+local sTitleBar = Instance.new("Frame")
+sTitleBar.Size = UDim2.new(1, 0, 0, 50)
+sTitleBar.BackgroundColor3 = COL_PANEL_ALT
+sTitleBar.ZIndex = 20
+sTitleBar.Parent = settingsFrame
+corner(sTitleBar, 16)
+
+local sTitle = Instance.new("TextLabel")
+sTitle.Size = UDim2.new(1, -50, 1, 0)
+sTitle.Position = UDim2.new(0, 16, 0, 0)
+sTitle.BackgroundTransparency = 1
+sTitle.Text = "Settings"
+sTitle.TextColor3 = COL_TEXT
+sTitle.TextSize = 18
+sTitle.TextXAlignment = Enum.TextXAlignment.Left
+sTitle.Font = Enum.Font.GothamBold
+sTitle.ZIndex = 20
+sTitle.Parent = sTitleBar
+
+local sCloseBtn = Instance.new("TextButton")
+sCloseBtn.Size = UDim2.new(0, 36, 0, 36)
+sCloseBtn.Position = UDim2.new(1, -44, 0.5, -18)
+sCloseBtn.BackgroundColor3 = COL_PANEL
+sCloseBtn.Text = "X"
+sCloseBtn.TextColor3 = COL_TEXT
+sCloseBtn.AutoButtonColor = false
+sCloseBtn.Font = Enum.Font.GothamBold
+sCloseBtn.ZIndex = 20
+sCloseBtn.Parent = sTitleBar
+corner(sCloseBtn, 9)
+hoverEffect(sCloseBtn, function() return COL_PANEL end, function() return COL_DANGER end)
+sCloseBtn.MouseButton1Click:Connect(function() settingsFrame.Visible = false end)
+
+-- EQ Effects
+local eqEffect = Instance.new("EqualizerSoundEffect")
+eqEffect.LowGain = 0
+eqEffect.MidGain = 2
+eqEffect.HighGain = 4
+
+local reverbEffect = Instance.new("ReverbSoundEffect")
+reverbEffect.DecayTime = 2
+reverbEffect.DryLevel = 0.8
+reverbEffect.WetLevel = 0.5
+
+-- ====================== THEME PICKER ======================
+local themeLabel = Instance.new("TextLabel")
+themeLabel.Size = UDim2.new(1, -32, 0, 16)
+themeLabel.Position = UDim2.new(0, 16, 0, 66)
+themeLabel.BackgroundTransparency = 1
+themeLabel.Text = "THEME"
+themeLabel.TextColor3 = COL_SUBTEXT
+themeLabel.TextSize = 11
+themeLabel.Font = Enum.Font.GothamBold
+themeLabel.TextXAlignment = Enum.TextXAlignment.Left
+themeLabel.ZIndex = 20
+themeLabel.Parent = settingsFrame
+
+local themeSwatchStrokes = {}
+
+local function makeThemeSwatch(themeKey, xPos)
+    local theme = Themes[themeKey]
+    local swatch = Instance.new("TextButton")
+    swatch.Size = UDim2.new(0, 76, 0, 64)
+    swatch.Position = UDim2.new(0, xPos, 0, 90)
+    swatch.BackgroundColor3 = theme.swatchColors[1]
+    swatch.AutoButtonColor = false
+    swatch.Text = ""
+    swatch.ZIndex = 20
+    swatch.Parent = settingsFrame
+    corner(swatch, 10)
+    gradient(swatch, theme.swatchColors[1], theme.swatchColors[2], 45)
+
+    local selStroke = stroke(swatch, Color3.fromRGB(255, 255, 255), 2)
+    selStroke.Transparency = 1
+    selStroke.ZIndex = 20
+    themeSwatchStrokes[themeKey] = selStroke
+
+    local swatchLabel = Instance.new("TextLabel")
+    swatchLabel.Size = UDim2.new(1, 0, 0, 16)
+    swatchLabel.Position = UDim2.new(0, 0, 1, -18)
+    swatchLabel.BackgroundTransparency = 1
+    swatchLabel.Text = theme.displayName
+    swatchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    swatchLabel.TextSize = 11
+    swatchLabel.Font = Enum.Font.GothamBold
+    swatchLabel.ZIndex = 21
+    swatchLabel.Parent = swatch
+
+    swatch.MouseButton1Click:Connect(function()
+        applyTheme(themeKey)
+    end)
+end
+
+makeThemeSwatch("Minimal", 16)
+makeThemeSwatch("Neon", 100)
+makeThemeSwatch("Glass", 184)
+makeThemeSwatch("Vibrant", 268)
+
+local function updateThemeSwatchHighlight()
+    for key, selStroke in pairs(themeSwatchStrokes) do
+        selStroke.Transparency = (key == currentThemeKey) and 0 or 1
+    end
+end
+
+-- Toggle row
+local toggleFrame = Instance.new("Frame")
+toggleFrame.Size = UDim2.new(1, -32, 0, 56)
+toggleFrame.Position = UDim2.new(0, 16, 0, 170)
+toggleFrame.BackgroundColor3 = COL_PANEL
+toggleFrame.ZIndex = 20
+toggleFrame.Parent = settingsFrame
+corner(toggleFrame, 12)
+
+local toggleLabel = Instance.new("TextLabel")
+toggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+toggleLabel.Position = UDim2.new(0, 16, 0, 0)
+toggleLabel.BackgroundTransparency = 1
+toggleLabel.Text = "Enable EQ + Reverb"
+toggleLabel.TextColor3 = COL_TEXT
+toggleLabel.TextSize = 15
+toggleLabel.Font = Enum.Font.GothamSemibold
+toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+toggleLabel.ZIndex = 20
+toggleLabel.Parent = toggleFrame
+
+-- iOS-style switch
+local switchTrack = Instance.new("Frame")
+switchTrack.Size = UDim2.new(0, 46, 0, 26)
+switchTrack.Position = UDim2.new(1, -62, 0.5, -13)
+switchTrack.BackgroundColor3 = COL_ACCENT
+switchTrack.ZIndex = 20
+switchTrack.Parent = toggleFrame
+corner(switchTrack, 13)
+
+local switchKnob = Instance.new("Frame")
+switchKnob.Size = UDim2.new(0, 20, 0, 20)
+switchKnob.Position = UDim2.new(1, -23, 0.5, -10)
+switchKnob.BackgroundColor3 = COL_TEXT
+switchKnob.ZIndex = 21
+switchKnob.Parent = switchTrack
+corner(switchKnob, 10)
+
+local switchBtn = Instance.new("TextButton")
+switchBtn.Size = UDim2.new(1, 0, 1, 0)
+switchBtn.BackgroundTransparency = 1
+switchBtn.Text = ""
+switchBtn.ZIndex = 22
+switchBtn.Parent = switchTrack
+
+-- Gain sliders (visual labels only, hooked to effect values)
+local function makeGainRow(yPos, labelText, effectObj, propName, minVal, maxVal, default)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -32, 0, 46)
+    row.Position = UDim2.new(0, 16, 0, yPos)
+    row.BackgroundTransparency = 1
+    row.ZIndex = 20
+    row.Parent = settingsFrame
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0.4, 0, 0, 18)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = labelText
+    lbl.TextColor3 = COL_SUBTEXT
+    lbl.TextSize = 13
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 20
+    lbl.Parent = row
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, 0, 0, 4)
+    track.Position = UDim2.new(0, 0, 0, 26)
+    track.BackgroundColor3 = COL_PANEL
+    track.ZIndex = 20
+    track.Parent = row
+    corner(track, 2)
+
+    local pct = (default - minVal) / (maxVal - minVal)
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(pct, 0, 1, 0)
+    fill.BackgroundColor3 = COL_ACCENT
+    fill.ZIndex = 20
+    fill.Parent = track
+    corner(fill, 2)
+
+    local knob = Instance.new("TextButton")
+    knob.Size = UDim2.new(0, 14, 0, 14)
+    knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    knob.Position = UDim2.new(pct, 0, 0.5, 0)
+    knob.BackgroundColor3 = COL_TEXT
+    knob.Text = ""
+    knob.ZIndex = 21
+    knob.Parent = track
+    corner(knob, 7)
+
+    local dragSlider = false
+    knob.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            dragSlider = true
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            dragSlider = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if dragSlider and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local relX = math.clamp((i.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+            fill.Size = UDim2.new(relX, 0, 1, 0)
+            knob.Position = UDim2.new(relX, 0, 0.5, 0)
+            effectObj[propName] = minVal + relX * (maxVal - minVal)
+        end
+    end)
+
+    return row
+end
+
+makeGainRow(238, "Low Gain", eqEffect, "LowGain", -15, 15, 0)
+makeGainRow(294, "Mid Gain", eqEffect, "MidGain", -15, 15, 2)
+makeGainRow(350, "High Gain", eqEffect, "HighGain", -15, 15, 4)
+
+-- ====================== FUNCTIONS ======================
+local function highlightCurrent()
+    for i, btn in ipairs(songButtons) do
+        if i == currentIndex then
+            tween(btn, {BackgroundColor3 = COL_PANEL_ALT}, 0.15)
+            btn.UIStroke.Transparency = 0
+        else
+            tween(btn, {BackgroundColor3 = COL_PANEL}, 0.15)
+            btn.UIStroke.Transparency = 1
+        end
+    end
+end
+
+local function updateNowPlaying(name)
+    nowPlaying.Text = name
+    miniLabel.Text = name
+end
+
+local function playSong(index)
+    currentIndex = index
+    local song = MusicList[index]
+
+    if currentSound then
+        eqEffect.Parent = nil
+        reverbEffect.Parent = nil
+        currentSound:Destroy()
+    end
+
+    currentSound = Instance.new("Sound")
+    currentSound.Name = "MusicPlayerSound"
+    currentSound.Volume = volFill.Size.X.Scale
+    currentSound.Parent = SoundService
+
+    local success = pcall(function()
+        if getgenv and writefile and getcustomasset then
+            local data = game:HttpGet(song.Url)
+            local ext = getUrlExtension(song.Url) or "mp3"
+            local uniqueFilename = "music_" .. tostring(index) .. "_" .. tostring(math.floor(tick() * 1000)) .. "." .. ext
+            writefile(uniqueFilename, data)
+            currentSound.SoundId = getcustomasset(uniqueFilename)
+        else
+            currentSound.SoundId = song.Url
+        end
+    end)
+
+    if not success then
+        currentSound.SoundId = song.Url
+    end
+
+    if eqEnabled then
+        eqEffect.Parent = currentSound
+        reverbEffect.Parent = currentSound
+    end
+
+    currentSound.Ended:Connect(function()
+        if currentSound and isPlaying then
+            if repeatEnabled then
+                playSong(currentIndex)
+            else
+                local nextIndex
+                if shuffleEnabled then
+                    nextIndex = math.random(1, #MusicList)
+                else
+                    nextIndex = currentIndex + 1
+                    if nextIndex > #MusicList then nextIndex = 1 end
+                end
+                playSong(nextIndex)
+            end
+        end
+    end)
+
+    currentSound:Play()
+    isPlaying = true
+    playBtn.Text = "||"
+    miniPlayBtn.Text = "||"
+    updateNowPlaying(song.Name)
+    highlightCurrent()
+end
+
+-- Song Buttons
+local function buildSongList(filterText)
+    for _, btn in ipairs(songButtons) do btn:Destroy() end
+    songButtons = {}
+
+    for i, song in ipairs(MusicList) do
+        if filterText == "" or string.find(string.lower(song.Name), string.lower(filterText)) then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 44)
+            local baseColor = (i == currentIndex) and COL_PANEL_ALT or COL_PANEL
+            btn.BackgroundColor3 = baseColor
+            btn.AutoButtonColor = false
+            btn.Text = "   - " .. song.Name
+            btn.TextColor3 = COL_TEXT
+            btn.TextSize = 14
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Font = Enum.Font.GothamSemibold
+            btn.Parent = scrollFrame
+            corner(btn, 10)
+            local st = stroke(btn, COL_ACCENT, 1.5)
+            st.Transparency = (i == currentIndex) and 0 or 1
+
+            hoverEffect(btn, function() return baseColor end, function() return COL_PANEL_ALT end)
+            btn.MouseButton1Click:Connect(function()
+                playSong(i)
+            end)
+
+            table.insert(songButtons, btn)
+        end
+    end
+
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+end
+
+buildSongList("")
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    buildSongList(searchBox.Text)
+end)
+
+-- ====================== THEME ENGINE ======================
+local panelSurfaces = {
+    mainFrame, titleBar, nowPlayingFrame, searchBox, customUrlBox,
+    shuffleBtn, prevBtn, nextBtn, repeatBtn, playBtn, addUrlBtn,
+    tabBtn, miniPlayer, miniPlayBtn, miniExpandBtn,
+    settingsFrame, sTitleBar, toggleFrame, sCloseBtn, settingsBtn, closeBtn,
+    switchTrack,
+}
+
+applyTheme = function(themeKey)
+    local theme = Themes[themeKey]
+    if not theme then return end
+    currentThemeKey = themeKey
+
+    COL_BG = theme.BG
+    COL_PANEL = theme.PANEL
+    COL_PANEL_ALT = theme.PANEL_ALT
+    COL_ACCENT = theme.ACCENT
+    COL_ACCENT_HI = theme.ACCENT_HI
+    COL_TEXT = theme.TEXT
+    COL_SUBTEXT = theme.SUBTEXT
+    COL_DANGER = theme.DANGER
+    COL_OK = theme.OK
+
+    mainFrame.BackgroundColor3 = COL_BG
+    mainFrameStroke.Color = theme.borderColor
+    mainFrameStroke.Thickness = theme.borderThickness
+    mainFrameStroke.Transparency = theme.borderTransparency
+
+    titleBar.BackgroundColor3 = COL_PANEL_ALT
+    titleMask.BackgroundColor3 = COL_PANEL_ALT
+    if theme.titleGradient == "accent" then
+        titleBarGradient.Color = ColorSequence.new(COL_ACCENT, COL_ACCENT_HI)
+    else
+        titleBarGradient.Color = ColorSequence.new(COL_PANEL_ALT, COL_PANEL)
+    end
+    title.TextColor3 = COL_TEXT
+
+    settingsBtn.BackgroundColor3 = COL_PANEL
+    closeBtn.BackgroundColor3 = COL_PANEL
+
+    nowPlayingFrame.BackgroundColor3 = COL_PANEL
+    nowPlayingLabel.TextColor3 = COL_SUBTEXT
+    timeLabel.TextColor3 = COL_SUBTEXT
+    nowPlaying.TextColor3 = COL_TEXT
+    progressBack.BackgroundColor3 = COL_PANEL_ALT
+    progressFill.BackgroundColor3 = COL_ACCENT
+    progressGradient.Color = ColorSequence.new(COL_ACCENT, COL_ACCENT_HI)
+
+    searchBox.BackgroundColor3 = COL_PANEL
+    searchBox.TextColor3 = COL_TEXT
+    searchBox.PlaceholderColor3 = COL_SUBTEXT
+
+    customUrlBox.BackgroundColor3 = COL_PANEL
+    customUrlBox.TextColor3 = COL_TEXT
+    customUrlBox.PlaceholderColor3 = COL_SUBTEXT
+    customUrlStroke.Color = COL_PANEL_ALT
+    addUrlBtn.BackgroundColor3 = COL_ACCENT
+
+    volIcon.TextColor3 = COL_SUBTEXT
+    volTrack.BackgroundColor3 = COL_PANEL
+    volFill.BackgroundColor3 = COL_ACCENT
+    volKnob.BackgroundColor3 = COL_TEXT
+
+    shuffleBtn.BackgroundColor3 = shuffleEnabled and COL_ACCENT or COL_PANEL
+    prevBtn.BackgroundColor3 = COL_PANEL
+    playBtn.BackgroundColor3 = COL_ACCENT
+    playBtnGradient.Color = ColorSequence.new(COL_ACCENT, COL_ACCENT_HI)
+    nextBtn.BackgroundColor3 = COL_PANEL
+    repeatBtn.BackgroundColor3 = repeatEnabled and COL_ACCENT or COL_PANEL
+
+    tabBtn.BackgroundColor3 = COL_PANEL_ALT
+    tabMask.BackgroundColor3 = COL_PANEL_ALT
+    tabBtnStroke.Color = theme.borderColor
+    tabBtnStroke.Thickness = theme.borderThickness
+    tabBtnStroke.Transparency = theme.borderTransparency
+
+    miniPlayer.BackgroundColor3 = COL_PANEL_ALT
+    miniPlayerStroke.Color = theme.borderColor
+    miniPlayerStroke.Thickness = theme.borderThickness
+    miniPlayerStroke.Transparency = theme.borderTransparency
+    miniLabel.TextColor3 = COL_TEXT
+    miniPlayBtn.BackgroundColor3 = COL_ACCENT
+    miniExpandBtn.BackgroundColor3 = COL_PANEL
+
+    settingsFrame.BackgroundColor3 = COL_BG
+    settingsFrameStroke.Color = theme.borderColor
+    settingsFrameStroke.Thickness = theme.borderThickness
+    settingsFrameStroke.Transparency = theme.borderTransparency
+    sTitleBar.BackgroundColor3 = COL_PANEL_ALT
+    sTitle.TextColor3 = COL_TEXT
+    sCloseBtn.BackgroundColor3 = COL_PANEL
+    themeLabel.TextColor3 = COL_SUBTEXT
+
+    toggleFrame.BackgroundColor3 = COL_PANEL
+    toggleLabel.TextColor3 = COL_TEXT
+    switchTrack.BackgroundColor3 = eqEnabled and COL_ACCENT or COL_PANEL_ALT
+    switchKnob.BackgroundColor3 = COL_TEXT
+
+    for _, obj in ipairs(panelSurfaces) do
+        if obj and obj:IsA("GuiObject") then
+            obj.BackgroundTransparency = theme.panelTransparency or 0
+        end
+    end
+
+    setBackgroundBlur(theme.blur or 0)
+
+    buildSongList(searchBox.Text)
+    updateThemeSwatchHighlight()
+end
+
+-- ====================== CUSTOM MP3 LINK ======================
+local function decodeUrlText(str)
+    str = string.gsub(str, "+", " ")
+    str = string.gsub(str, "%%(%x%x)", function(hex)
+        return string.char(tonumber(hex, 16))
+    end)
+    return str
+end
+
+local function deriveNameFromUrl(url)
+    local filename = url:match("([^/]+)$") or url
+    filename = decodeUrlText(filename)
+    filename = filename:gsub("%.[Mm][Pp]3$", "")
+    if filename == "" then filename = "Custom Song" end
+    return filename
+end
+
+local function flashInvalidUrl()
+    customUrlStroke.Color = COL_DANGER
+    tween(customUrlStroke, {Transparency = 0}, 0.1)
+    local placeholderBefore = customUrlBox.PlaceholderText
+    customUrlBox.PlaceholderText = "Link must end with .mp3"
+    task.delay(1.2, function()
+        tween(customUrlStroke, {Transparency = 0.4}, 0.4)
+        customUrlStroke.Color = Color3.fromRGB(70, 70, 85)
+        customUrlBox.PlaceholderText = placeholderBefore
+    end)
+end
+
+local function addCustomSong()
+    local rawUrl = customUrlBox.Text
+    rawUrl = rawUrl:gsub("^%s+", ""):gsub("%s+$", "")
+    if rawUrl == "" then return end
+
+    if not getUrlExtension(rawUrl) then
+        flashInvalidUrl()
+        return
+    end
+
+    local name = deriveNameFromUrl(rawUrl)
+    table.insert(MusicList, {Name = name, Url = rawUrl})
+    buildSongList(searchBox.Text)
+    customUrlBox.Text = ""
+    playSong(#MusicList)
+end
+
+addUrlBtn.MouseButton1Click:Connect(addCustomSong)
+customUrlBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        addCustomSong()
+    end
+end)
+
+-- Progress bar update loop
+task.spawn(function()
+    while gui.Parent do
+        if currentSound and currentSound.IsLoaded and currentSound.TimeLength > 0 then
+            local pct = currentSound.TimePosition / currentSound.TimeLength
+            progressFill.Size = UDim2.new(pct, 0, 1, 0)
+            timeLabel.Text = formatTime(currentSound.TimePosition) .. " / " .. formatTime(currentSound.TimeLength)
+        end
+        -- self-heal: if we think we're playing but the Sound disagrees, force it back
+        if currentSound and isPlaying and not currentSound.Playing then
+            currentSound:Resume()
+        end
+        task.wait(0.25)
+    end
+end)
+
+-- Backstop: explicitly resume playback right after a respawn, just in case
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    if currentSound and isPlaying and not currentSound.Playing then
+        currentSound:Resume()
+    end
+end)
+
+-- Controls
+local function togglePlayPause()
+    if not currentSound then
+        playSong(1)
+        return
+    end
+    if isPlaying then
+        currentSound:Pause()
+        isPlaying = false
+    else
+        currentSound:Resume()
+        isPlaying = true
+    end
+    local icon = isPlaying and "||" or ">"
+    playBtn.Text = icon
+    miniPlayBtn.Text = icon
+end
+
+playBtn.MouseButton1Click:Connect(togglePlayPause)
+miniPlayBtn.MouseButton1Click:Connect(togglePlayPause)
+
+nextBtn.MouseButton1Click:Connect(function()
+    local nextIndex
+    if shuffleEnabled then
+        nextIndex = math.random(1, #MusicList)
+    else
+        nextIndex = currentIndex + 1
+        if nextIndex > #MusicList then nextIndex = 1 end
+    end
+    playSong(nextIndex)
+end)
+
+prevBtn.MouseButton1Click:Connect(function()
+    local prevIndex = currentIndex - 1
+    if prevIndex < 1 then prevIndex = #MusicList end
+    playSong(prevIndex)
+end)
+
+shuffleBtn.MouseButton1Click:Connect(function()
+    shuffleEnabled = not shuffleEnabled
+    tween(shuffleBtn, {BackgroundColor3 = shuffleEnabled and COL_ACCENT or COL_PANEL}, 0.15)
+end)
+
+repeatBtn.MouseButton1Click:Connect(function()
+    repeatEnabled = not repeatEnabled
+    tween(repeatBtn, {BackgroundColor3 = repeatEnabled and COL_ACCENT or COL_PANEL}, 0.15)
+end)
+
+-- Volume slider drag
+local draggingVol = false
+volKnob.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        draggingVol = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        draggingVol = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if draggingVol and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local relX = math.clamp((i.Position.X - volTrack.AbsolutePosition.X) / volTrack.AbsoluteSize.X, 0, 1)
+        volFill.Size = UDim2.new(relX, 0, 1, 0)
+        volKnob.Position = UDim2.new(relX, 0, 0.5, 0)
+        if currentSound then
+            currentSound.Volume = relX
+        end
+    end
+end)
+
+-- Settings
+settingsBtn.MouseButton1Click:Connect(function()
+    settingsFrame.Visible = not settingsFrame.Visible
+end)
+
+switchBtn.MouseButton1Click:Connect(function()
+    eqEnabled = not eqEnabled
+    tween(switchTrack, {BackgroundColor3 = eqEnabled and COL_ACCENT or COL_PANEL_ALT}, 0.15)
+    tween(switchKnob, {Position = eqEnabled and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)}, 0.15)
+
+    if currentSound then
+        if eqEnabled then
+            eqEffect.Parent = currentSound
+            reverbEffect.Parent = currentSound
+        else
+            eqEffect.Parent = nil
+            reverbEffect.Parent = nil
+        end
+    end
+end)
+
+-- ====================== STARTUP (runs last, after all functions exist) ======================
+applyTheme("Minimal")
+
+-- Open animation
+mainFrame.Size = UDim2.new(0, 420, 0, 0)
+mainFrame.Visible = true
+tween(mainFrame, {Size = UDim2.new(0, 420, 0, 606)}, 0.25, Enum.EasingStyle.Quint)
+
+-- Auto play first song when loaded
+task.wait(0.3)
+playSong(1)
+
+print("[OK] Music Player Loaded Successfully! Click songs to play, or type ;openui / ;closeui in chat.")
